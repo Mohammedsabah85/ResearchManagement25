@@ -1,0 +1,726 @@
+@model ResearchManagement.Web.Models.ViewModels.Research.CreateResearchViewModel
+@{
+    ViewData["Title"] = "تعديل البحث";
+
+}
+
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-edit me-2 text-warning"></i>تعديل البحث</h2>
+            <p class="text-muted">تعديل معلومات البحث المقدم</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Details" asp-route-id="@Model.ResearchId" class="btn btn-outline-primary">
+                <i class="fas fa-eye me-2"></i>عرض التفاصيل
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert for edit mode -->
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>تنبيه:</strong> يمكن تعديل البحث فقط في حالة "مُقدم" أو "يتطلب تعديل".
+    </div>
+
+    <!-- Form -->
+    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="editResearchForm">
+        <input type="hidden" asp-for="ResearchId" />
+        <input type="hidden" asp-for="CurrentUserId" />
+        
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات البحث الأساسية</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">عنوان البحث (بالعربية) *</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TitleEn" class="form-label">عنوان البحث (بالإنجليزية)</label>
+                            <input asp-for="TitleEn" class="form-control" />
+                            <span asp-validation-for="TitleEn" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ResearchType" class="form-label">نوع البحث *</label>
+                                <select asp-for="ResearchType" asp-items="Model.ResearchTypeOptions" class="form-select">
+                                    <option value="">اختر نوع البحث</option>
+                                </select>
+                                <span asp-validation-for="ResearchType" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Language" class="form-label">لغة البحث *</label>
+                                <select asp-for="Language" asp-items="Model.LanguageOptions" class="form-select">
+                                    <option value="">اختر لغة البحث</option>
+                                </select>
+                                <span asp-validation-for="Language" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Track" class="form-label">المسار *</label>
+                                <select asp-for="Track" asp-items="Model.TrackOptions" class="form-select">
+                                    <option value="">اختر المسار</option>
+                                </select>
+                                <span asp-validation-for="Track" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AbstractAr" class="form-label">الملخص (بالعربية) *</label>
+                            <textarea asp-for="AbstractAr" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="AbstractAr" class="text-danger"></span>
+                            <div class="form-text">عدد الكلمات: <span id="abstractArCount">0</span>/300</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AbstractEn" class="form-label">الملخص (بالإنجليزية)</label>
+                            <textarea asp-for="AbstractEn" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="AbstractEn" class="text-danger"></span>
+                            <div class="form-text">Word count: <span id="abstractEnCount">0</span>/300</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Keywords" class="form-label">الكلمات المفتاحية (بالعربية)</label>
+                                <input asp-for="Keywords" class="form-control" />
+                                <span asp-validation-for="Keywords" class="text-danger"></span>
+                                <div class="form-text">افصل بين الكلمات بفاصلة</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="KeywordsEn" class="form-label">الكلمات المفتاحية (بالإنجليزية)</label>
+                                <input asp-for="KeywordsEn" class="form-control" />
+                                <span asp-validation-for="KeywordsEn" class="text-danger"></span>
+                                <div class="form-text">Separate keywords with commas</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">ملاحظات إضافية</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authors Section -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>معلومات الباحثين</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addAuthor">
+                            <i class="fas fa-plus me-1"></i>إضافة باحث
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="authorsContainer">
+                            @for (int i = 0; i < Model.Authors.Count; i++)
+                            {
+                                <div class="author-item border rounded p-3 mb-3" data-index="@i">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-user me-2"></i>
+                                            @if (i == 0)
+                                            {
+                                                <span>الباحث الرئيسي</span>
+                                                <span class="badge bg-primary ms-2">مطلوب</span>
+                                            }
+                                            else
+                                            {
+                                                <span>الباحث @(i + 1)</span>
+                                            }
+                                        </h6>
+                                        @if (i > 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-author">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">الاسم الأول *</label>
+                                            <input asp-for="Authors[i].FirstName" class="form-control" />
+                                            <span asp-validation-for="Authors[i].FirstName" class="text-danger"></span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">اسم العائلة *</label>
+                                            <input asp-for="Authors[i].LastName" class="form-control" />
+                                            <span asp-validation-for="Authors[i].LastName" class="text-danger"></span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">الاسم الأول (إنجليزي)</label>
+                                            <input asp-for="Authors[i].FirstNameEn" class="form-control" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">اسم العائلة (إنجليزي)</label>
+                                            <input asp-for="Authors[i].LastNameEn" class="form-control" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">البريد الإلكتروني *</label>
+                                            <input asp-for="Authors[i].Email" type="email" class="form-control" />
+                                            <span asp-validation-for="Authors[i].Email" class="text-danger"></span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">المؤسسة</label>
+                                            <input asp-for="Authors[i].Institution" class="form-control" />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">الدرجة العلمية</label>
+                                            <input asp-for="Authors[i].AcademicDegree" class="form-control" />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">رقم ORCID</label>
+                                            <input asp-for="Authors[i].OrcidId" class="form-control" />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input asp-for="Authors[i].IsCorresponding" type="checkbox" class="form-check-input" />
+                                                <label asp-for="Authors[i].IsCorresponding" class="form-check-label">الباحث المراسل</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <input asp-for="Authors[i].Order" type="hidden" />
+                                    <input asp-for="Authors[i].UserId" type="hidden" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Files Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-file me-2"></i>ملفات البحث</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Current Files -->
+                        <div class="mb-3">
+                            <h6>الملفات الحالية:</h6>
+                            <div id="currentFiles">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Upload New File -->
+                        <div class="mb-3">
+                            <label for="newFiles" class="form-label">رفع ملفات جديدة</label>
+                            <input type="file" class="form-control" id="newFiles" name="Files" multiple accept=".pdf,.doc,.docx" />
+                            <div class="form-text">
+                                الصيغ المدعومة: PDF, DOC, DOCX<br>
+                                الحد الأقصى: 50 ميجابايت لكل ملف
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>الإجراءات</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>حفظ التعديلات
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.ResearchId" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>إلغاء
+                            </a>
+                            <hr>
+                            <a asp-action="Index" class="btn btn-outline-primary">
+                                <i class="fas fa-list me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+                let authorIndex = @Model.Authors.Count;
+        let researchId = @(Model.ResearchId ?? 0);
+
+        $(document).ready(function() {
+            // Word count for abstracts
+            updateWordCount($('#AbstractAr')[0], 'abstractArCount');
+            updateWordCount($('#AbstractEn')[0], 'abstractEnCount');
+
+            $('#AbstractAr').on('input', function() {
+                updateWordCount(this, 'abstractArCount');
+            });
+
+            $('#AbstractEn').on('input', function() {
+                updateWordCount(this, 'abstractEnCount');
+            });
+
+            // Load current files
+            if (researchId > 0) {
+                loadCurrentFiles();
+            }
+
+            // File upload preview
+            $('#newFiles').on('change', function() {
+                previewSelectedFiles(this);
+            });
+        });
+
+        // Load current files from server
+        function loadCurrentFiles() {
+            if (researchId <= 0) {
+                $('#currentFiles').html(`
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        معرف البحث غير صحيح
+                    </div>
+                `);
+                return;
+            }
+
+            // Show loading spinner
+            $('#currentFiles').html(`
+                <div class="text-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    جاري تحميل الملفات...
+                </div>
+            `);
+
+            $.ajax({
+                url: '@Url.Action("GetResearchFiles", "Research")',
+                type: 'GET',
+                data: { researchId: researchId },
+                success: function(response) {
+                    if (response.success && response.files) {
+                        displayCurrentFiles(response.files);
+                    } else {
+                        $('#currentFiles').html(`
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                ${response.message || 'لا توجد ملفات'}
+                            </div>
+                        `);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('خطأ في جلب الملفات:', error);
+                    $('#currentFiles').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            حدث خطأ في جلب الملفات
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        // Display current files
+        function displayCurrentFiles(files) {
+            if (!files || files.length === 0) {
+                $('#currentFiles').html(`
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        لا توجد ملفات مرفوعة حالياً
+                    </div>
+                `);
+                return;
+            }
+
+            let filesHtml = '';
+
+            files.forEach(function(file) {
+                const fileIcon = getFileIcon(file.contentType);
+                const fileTypeClass = getFileTypeClass(file.contentType);
+
+                filesHtml += `
+                    <div class="file-item border rounded p-2 mb-2" data-file-id="${file.id}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <i class="${fileIcon} ${fileTypeClass} me-2"></i>
+                                <div class="file-info flex-grow-1">
+                                    <div class="file-name fw-bold text-truncate" title="${file.fileName}">
+                                        ${file.fileName}
+                                    </div>
+                                    <small class="text-muted">
+                                        ${file.fileSize} • ${file.createdAt}
+                                        ${file.description ? ' • ' + file.description : ''}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <a href="${file.downloadUrl}"
+                                   class="btn btn-sm btn-outline-primary me-1"
+                                   title="تحميل الملف">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger delete-file"
+                                        data-file-id="${file.id}"
+                                        title="حذف الملف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${file.version > 1 ? `<small class="badge bg-info">الإصدار ${file.version}</small>` : ''}
+                    </div>
+                `;
+            });
+
+            $('#currentFiles').html(filesHtml);
+        }
+
+        // Delete file
+        $(document).on('click', '.delete-file', function() {
+            const fileId = $(this).data('file-id');
+            const fileName = $(this).closest('.file-item').find('.file-name').text();
+
+            if (confirm(`هل أنت متأكد من حذف الملف "${fileName}"؟`)) {
+                deleteFile(fileId);
+            }
+        });
+
+        function deleteFile(fileId) {
+            const fileItem = $(`.file-item[data-file-id="${fileId}"]`);
+            const deleteBtn = fileItem.find('.delete-file');
+
+            // Show loading state
+            deleteBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '@Url.Action("DeleteResearchFile", "Research")',
+                type: 'DELETE',
+                data: { fileId: fileId },
+                success: function(response) {
+                    if (response.success) {
+                        // Remove file item with animation
+                        fileItem.fadeOut(300, function() {
+                            $(this).remove();
+
+                            // Check if no files left
+                            if ($('.file-item').length === 0) {
+                                $('#currentFiles').html(`
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        لا توجد ملفات مرفوعة حالياً
+                                    </div>
+                                `);
+                            }
+                        });
+
+                        // Show success message
+                        showToast('success', 'تم حذف الملف بنجاح');
+                    } else {
+                        showToast('error', response.message || 'فشل في حذف الملف');
+                        deleteBtn.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('خطأ في حذف الملف:', error);
+                    showToast('error', 'حدث خطأ في حذف الملف');
+                    deleteBtn.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                }
+            });
+        }
+
+        // Preview selected files
+        function previewSelectedFiles(input) {
+            const files = input.files;
+            const previewContainer = $('#filePreview');
+
+            if (files.length === 0) {
+                previewContainer.empty();
+                return;
+            }
+
+            let previewHtml = '<div class="mt-3"><h6>الملفات المحددة للرفع:</h6>';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileIcon = getFileIcon(file.type);
+                const fileTypeClass = getFileTypeClass(file.type);
+                const fileSize = formatFileSize(file.size);
+
+                previewHtml += `
+                    <div class="file-preview-item border rounded p-2 mb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="${fileIcon} ${fileTypeClass} me-2"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">${file.name}</div>
+                                <small class="text-muted">${fileSize}</small>
+                            </div>
+                            <span class="badge bg-success">جديد</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            previewHtml += '</div>';
+
+            // Add or update preview
+            if (previewContainer.length === 0) {
+                $('#newFiles').after('<div id="filePreview"></div>');
+            }
+            $('#filePreview').html(previewHtml);
+        }
+
+        // Helper functions
+        function getFileIcon(contentType) {
+            if (contentType.includes('pdf')) return 'fas fa-file-pdf';
+            if (contentType.includes('word') || contentType.includes('document')) return 'fas fa-file-word';
+            if (contentType.includes('image')) return 'fas fa-file-image';
+            if (contentType.includes('excel') || contentType.includes('spreadsheet')) return 'fas fa-file-excel';
+            return 'fas fa-file';
+        }
+
+        function getFileTypeClass(contentType) {
+            if (contentType.includes('pdf')) return 'text-danger';
+            if (contentType.includes('word') || contentType.includes('document')) return 'text-primary';
+            if (contentType.includes('image')) return 'text-success';
+            if (contentType.includes('excel') || contentType.includes('spreadsheet')) return 'text-warning';
+            return 'text-secondary';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showToast(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            const toast = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas ${icon} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            $('body').append(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.alert('close');
+            }, 5000);
+        }
+
+        // Add new author
+        $('#addAuthor').click(function() {
+            addAuthor();
+        });
+
+        function addAuthor() {
+            const authorHtml = `
+                <div class="author-item border rounded p-3 mb-3" data-index="${authorIndex}">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user me-2"></i>الباحث ${authorIndex + 1}
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-author">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الاسم الأول *</label>
+                            <input name="Authors[${authorIndex}].FirstName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">اسم العائلة *</label>
+                            <input name="Authors[${authorIndex}].LastName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الاسم الأول (إنجليزي)</label>
+                            <input name="Authors[${authorIndex}].FirstNameEn" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">اسم العائلة (إنجليزي)</label>
+                            <input name="Authors[${authorIndex}].LastNameEn" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">البريد الإلكتروني *</label>
+                            <input name="Authors[${authorIndex}].Email" type="email" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">المؤسسة</label>
+                            <input name="Authors[${authorIndex}].Institution" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">الدرجة العلمية</label>
+                            <input name="Authors[${authorIndex}].AcademicDegree" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">رقم ORCID</label>
+                            <input name="Authors[${authorIndex}].OrcidId" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check mt-4">
+                                <input name="Authors[${authorIndex}].IsCorresponding" type="checkbox" class="form-check-input" />
+                                <label class="form-check-label">الباحث المراسل</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input name="Authors[${authorIndex}].Order" type="hidden" value="${authorIndex + 1}" />
+                </div>
+            `;
+
+            $('#authorsContainer').append(authorHtml);
+            authorIndex++;
+        }
+
+        // Remove author
+        $(document).on('click', '.remove-author', function() {
+            $(this).closest('.author-item').remove();
+            updateAuthorIndices();
+        });
+
+        function updateAuthorIndices() {
+            $('#authorsContainer .author-item').each(function(index) {
+                $(this).attr('data-index', index);
+                $(this).find('input, select').each(function() {
+                    const name = $(this).attr('name');
+                    if (name && name.includes('Authors[')) {
+                        $(this).attr('name', name.replace(/Authors\[\d+\]/, `Authors[${index}]`));
+                    }
+                });
+
+                $(this).find('input[name$=".Order"]').val(index + 1);
+
+                // Update header text
+                const header = $(this).find('h6');
+                if (index === 0) {
+                    header.html('<i class="fas fa-user me-2"></i>الباحث الرئيسي <span class="badge bg-primary ms-2">مطلوب</span>');
+                } else {
+                    header.html(`<i class="fas fa-user me-2"></i>الباحث ${index + 1}`);
+                }
+            });
+
+            authorIndex = $('#authorsContainer .author-item').length;
+        }
+
+        function updateWordCount(element, counterId) {
+            const text = $(element).val().trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            $(`#${counterId}`).text(words);
+
+            if (words > 300) {
+                $(`#${counterId}`).addClass('text-danger');
+            } else {
+                $(`#${counterId}`).removeClass('text-danger');
+            }
+        }
+
+        // Form validation
+        $('#editResearchForm').on('submit', function(e) {
+            let isValid = true;
+
+            // Check required fields
+            $(this).find('input[required], select[required], textarea[required]').each(function() {
+                if (!$(this).val().trim()) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            // Check at least one author
+            if ($('#authorsContainer .author-item').length === 0) {
+                isValid = false;
+                alert('يجب إضافة باحث واحد على الأقل');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                $('html, body').animate({
+                    scrollTop: $('.is-invalid').first().offset().top - 100
+                }, 500);
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .author-item {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+            .author-item:hover {
+                background-color: #e9ecef;
+            }
+
+        .file-item {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+            .file-item:hover {
+                background-color: #e9ecef;
+            }
+
+        .file-info .file-name {
+            max-width: 250px;
+        }
+
+        .file-actions .btn {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .file-preview-item {
+            background-color: #f0f8ff;
+            border-left: 3px solid #007bff !important;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .word-count-warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .card-header h5 {
+            color: #495057;
+        }
+
+        .btn-group-vertical .btn {
+            margin-bottom: 0.25rem;
+        }
+
+        .alert {
+            margin-bottom: 0;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+}
