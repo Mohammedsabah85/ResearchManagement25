@@ -350,8 +350,8 @@
                             <option value="">-- اختر الحالة --</option>
                             @foreach (var status in Enum.GetValues(typeof(ResearchManagement.Domain.Enums.ResearchStatus)))
                             {
-                                <option value="@status" @(status.Equals(Model.Research.Status) ? "selected" : "")>@status</option>
-                            }
+@*                                 <option value="@status" @(status.Equals(Model.Research.Status) ? "selected" : "")>@status</option>
+ *@                            }
                         </select>
                     </div>
                     

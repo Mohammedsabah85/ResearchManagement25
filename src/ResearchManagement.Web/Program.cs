@@ -5,19 +5,11 @@ using ResearchManagement.Domain.Entities;
 using ResearchManagement.Web.Extensions;
 using ResearchManagement.Infrastructure.Middleware;
 using Serilog;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using ResearchManagement.Domain.Entities;
-using ResearchManagement.Infrastructure.Data;
 using ResearchManagement.Application.Interfaces;
 using ResearchManagement.Infrastructure.Repositories;
 using ResearchManagement.Infrastructure.Services;
-using ResearchManagement.Infrastructure.Middleware;
 using FluentValidation;
-using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
-using ResearchManagement.Web.Extensions;
 using ResearchManagement.Application.Commands.Research;
 using ResearchManagement.Application.Mappings;
 using MediatR;
@@ -25,6 +17,7 @@ using ResearchManagement.Application.DTOs;
 using ResearchManagement.Application.Queries.Research;
 using ResearchManagement.Web.Mappings;
 using Microsoft.Extensions.Options;
+
 
 //  ﬂÊÌ‰ Serilog ··Õ’Ê· ⁄·Ï  ”ÃÌ· √›÷·
 Log.Logger = new LoggerConfiguration()
@@ -171,10 +164,18 @@ configuration
 // ≈⁄œ«œ DbContext
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// ≈⁄œ«œ Identity „⁄  Õ”Ì‰«  «·√„«‰
-builder.Services.AddIdentity<User, IdentityRole>(options =>
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            b => b.MigrationsAssembly("ResearchManagement.Infrastructure")
+        ));
+
+
+    // ≈⁄œ«œ Identity „⁄  Õ”Ì‰«  «·√„«‰
+    builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     // ≈⁄œ«œ«  ﬂ·„… «·„—Ê—
     options.Password.RequireDigit = true;
@@ -218,6 +219,7 @@ builder.Services.AddScoped<IResearchRepository, ResearchRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IResearchStatusHistoryRepository, ResearchStatusHistoryRepository>();
+    builder.Services.AddScoped<ITrackManagerRepository, TrackManagerRepository>();
 
     builder.Services.AddLogging();
 
@@ -360,10 +362,10 @@ async Task SeedDatabase(WebApplication app)
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
             // ≈‰‘«¡ ﬁ«⁄œ… «·»Ì«‰«  ≈–« ·„  ﬂ‰ „ÊÃÊœ…
-            await context.Database.EnsureCreatedAsync();
-
-            //  ÿ»Ìﬁ Database Seeding
-            await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
+            //await context.Database.EnsureCreatedAsync();
+                await context.Database.MigrateAsync();
+                //  ÿ»Ìﬁ Database Seeding
+                await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
             await EnhancedDatabaseSeeder.SeedAsync(context, userManager, roleManager);
             logger.LogInformation(" „  ‘€Ì· «· ÿ»Ìﬁ »‰Ã«Õ");
         }

@@ -8,6 +8,8 @@ namespace ResearchManagement.Application.Interfaces
 {
     public interface ITrackManagerRepository : IGenericRepository<TrackManager>
     {
+       
+
         Task<TrackManager?> GetByUserIdAsync(string userId);
         Task<TrackManager?> GetByIdWithDetailsAsync(int id);
         Task<TrackManager?> GetByTrackAsync(ResearchTrack track);

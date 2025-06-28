@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using ResearchManagement.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ResearchManagement.Web.Controllers
 {
@@ -23,7 +25,7 @@ namespace ResearchManagement.Web.Controllers
         private readonly IReviewRepository _reviewRepository;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<TrackManagementController> _logger;
-
+        private readonly ApplicationDbContext _context; // إضافة هذا
         public TrackManagementController(
             UserManager<User> userManager,
             IMediator mediator,
@@ -31,7 +33,9 @@ namespace ResearchManagement.Web.Controllers
             IResearchRepository researchRepository,
             IReviewRepository reviewRepository,
             IUserRepository userRepository,
-            ILogger<TrackManagementController> logger) : base(userManager)
+            
+            ILogger<TrackManagementController> logger,
+            ApplicationDbContext context) : base(userManager) 
         {
             _mediator = mediator;
             _trackManagerRepository = trackManagerRepository;
@@ -39,6 +43,7 @@ namespace ResearchManagement.Web.Controllers
             _reviewRepository = reviewRepository;
             _userRepository = userRepository;
             _logger = logger;
+            _context = context; // إضافة هذا
         }
 
         public async Task<IActionResult> Index()
@@ -121,16 +126,16 @@ namespace ResearchManagement.Web.Controllers
                     return RedirectToAction("Index", "Dashboard");
                 }
 
-                var pendingResearches = await _researchRepository.GetByStatusAndTrackAsync(
-                    ResearchStatus.Submitted, trackManager.Track);
-                
+                //var pendingResearches = await _researchRepository.GetByStatusAndTrackAsync(
+                //    ResearchStatus.Submitted, trackManager.Track);
+
                 var trackReviewers = await _trackManagerRepository.GetTrackReviewersAsync(trackManager.Id);
                 
                 var model = new AssignReviewsViewModel
                 {
                     TrackId = trackManager.Id,
                     TrackName = trackManager.TrackDescription ?? trackManager.Track.ToString(),
-                    PendingResearches = pendingResearches.ToList(),
+                    //PendingResearches = pendingResearches.ToList(),
                     Reviewers = trackReviewers.Select(tr => tr.Reviewer).ToList()
                 };
 
@@ -226,7 +231,7 @@ namespace ResearchManagement.Web.Controllers
                 }
 
                 var trackReviewers = await _trackManagerRepository.GetTrackReviewersAsync(trackManager.Id);
-                var availableReviewers = await _userRepository.GetUsersByRoleAsync(UserRole.Reviewer);
+                var availableReviewers = await _userRepository.GetByRoleAsync(UserRole.Reviewer);
                 
                 // استبعاد المراجعين الحاليين
                 var currentReviewerIds = trackReviewers.Select(tr => tr.ReviewerId).ToList();
