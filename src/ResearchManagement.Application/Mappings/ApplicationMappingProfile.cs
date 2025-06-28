@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using ResearchManagement.Application.DTOs;
 using ResearchManagement.Domain.Entities;
+using System;
+using System.Linq;
 
 namespace ResearchManagement.Application.Mappings
 {
@@ -102,7 +104,7 @@ namespace ResearchManagement.Application.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ReviewerId, opt => opt.Ignore())
                 .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.Deadline, opt => opt.MapFrom(src => DateTime.UtcNow.AddDays(21)))
+                .ForMember(dest => dest.Deadline, opt => opt.MapFrom(src => src.Deadline ?? DateTime.UtcNow.AddDays(21)))
                 .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => false))
                 .ForMember(dest => dest.RequiresReReview, opt => opt.MapFrom(src => false))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
@@ -134,6 +136,42 @@ namespace ResearchManagement.Application.Mappings
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Research, opt => opt.Ignore())
                 .ForMember(dest => dest.Review, opt => opt.Ignore());
+                
+            // TrackManager Mappings
+            CreateMap<TrackManager, TrackManagerDto>()
+                .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => 
+                    $"{src.User.FirstName} {src.User.LastName}"))
+                .ForMember(dest => dest.ManagerEmail, opt => opt.MapFrom(src => src.User.Email));
+                
+            CreateMap<CreateTrackManagerDto, TrackManager>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.ManagedResearches, opt => opt.Ignore())
+                .ForMember(dest => dest.TrackReviewers, opt => opt.Ignore());
+                
+            CreateMap<UpdateTrackManagerDto, TrackManager>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.ManagedResearches, opt => opt.Ignore())
+                .ForMember(dest => dest.TrackReviewers, opt => opt.Ignore());
+                
+            // TrackReviewer Mappings
+            CreateMap<TrackReviewer, TrackReviewerDto>()
+                .ForMember(dest => dest.ReviewerName, opt => opt.MapFrom(src => 
+                    $"{src.Reviewer.FirstName} {src.Reviewer.LastName}"))
+                .ForMember(dest => dest.ReviewerEmail, opt => opt.MapFrom(src => src.Reviewer.Email));
+                
+            CreateMap<CreateTrackReviewerDto, TrackReviewer>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.TrackManager, opt => opt.Ignore())
+                .ForMember(dest => dest.Reviewer, opt => opt.Ignore());
+                
+            CreateMap<UpdateTrackReviewerDto, TrackReviewer>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.TrackManager, opt => opt.Ignore())
+                .ForMember(dest => dest.Reviewer, opt => opt.Ignore());
         }
     }
 }

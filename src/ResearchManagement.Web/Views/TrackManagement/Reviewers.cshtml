@@ -1,0 +1,153 @@
+@model ResearchManagement.Web.Models.ViewModels.TrackReviewersViewModel
+@{
+    ViewData["Title"] = "إدارة المراجعين";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "TrackManagement")">إدارة البحوث</a></li>
+                <li class="breadcrumb-item active" aria-current="page">إدارة المراجعين</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-users me-2"></i>إدارة المراجعين - @Model.TrackName</h2>
+        <p class="text-muted">إضافة وإدارة المراجعين في التخصص</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>المراجعون الحاليون</h5>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addReviewerModal">
+                    <i class="fas fa-plus me-1"></i>إضافة مراجع
+                </button>
+            </div>
+            <div class="card-body">
+                @if (Model.CurrentReviewers.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reviewer in Model.CurrentReviewers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@reviewer.Reviewer.FirstName @reviewer.Reviewer.LastName</strong>
+                                        </td>
+                                        <td>@reviewer.Reviewer.Email</td>
+                                        <td>
+                                            @if (reviewer.IsActive)
+                                            {
+                                                <span class="badge bg-success">نشط</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">غير نشط</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <form asp-action="RemoveReviewer" method="post" class="d-inline">
+                                                <input type="hidden" name="reviewerId" value="@reviewer.Id" />
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من إزالة هذا المراجع؟')">
+                                                    <i class="fas fa-trash me-1"></i>إزالة
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا يوجد مراجعون في هذا التخصص</h5>
+                        <p class="text-muted">قم بإضافة مراجعين للبدء في توزيع المراجعات</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="fas fa-lightbulb me-1"></i>نصائح لإدارة المراجعين</h6>
+                    <ul class="mb-0">
+                        <li>قم بإضافة مراجعين متخصصين في مجال التراك</li>
+                        <li>حاول توزيع المراجعات بشكل متوازن بين المراجعين</li>
+                        <li>تأكد من متابعة المراجعات المتأخرة وإرسال تذكيرات للمراجعين</li>
+                        <li>يمكنك إزالة المراجع في حال عدم استجابته أو تأخره المتكرر</li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="@Url.Action("AssignReviews")" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i>توزيع المراجعات
+                    </a>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Reviewer Modal -->
+<div class="modal fade" id="addReviewerModal" tabindex="-1" aria-labelledby="addReviewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddReviewer" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addReviewerModalLabel">إضافة مراجع جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="TrackManagerId" value="@Model.TrackId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">اختر المراجع:</label>
+                        <select name="ReviewerId" class="form-select" required>
+                            <option value="">-- اختر المراجع --</option>
+                            @foreach (var reviewer in Model.AvailableReviewers)
+                            {
+                                <option value="@reviewer.Id">@reviewer.FirstName @reviewer.LastName - @reviewer.Email</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة المراجع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log('Reviewers Management loaded');
+        });
+    </script>
+}

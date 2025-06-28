@@ -1,0 +1,172 @@
+@model ResearchManagement.Web.Models.ViewModels.AssignReviewsViewModel
+@{
+    ViewData["Title"] = "توزيع المراجعات";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "TrackManagement")">إدارة البحوث</a></li>
+                <li class="breadcrumb-item active" aria-current="page">توزيع المراجعات</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-user-plus me-2"></i>توزيع المراجعات - @Model.TrackName</h2>
+        <p class="text-muted">تعيين المراجعين للبحوث المقدمة</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>البحوث المنتظرة للتوزيع</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.PendingResearches.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>العنوان</th>
+                                    <th>الباحث</th>
+                                    <th>تاريخ التقديم</th>
+                                    <th>المراجعات</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var research in Model.PendingResearches)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@research.Title</strong>
+                                        </td>
+                                        <td>
+                                            @research.SubmittedBy.FirstName @research.SubmittedBy.LastName
+                                        </td>
+                                        <td>@research.SubmissionDate.ToString("yyyy/MM/dd")</td>
+                                        <td>
+                                            <span class="badge bg-info">@research.Reviews.Count(r => r.IsCompleted)/@research.Reviews.Count</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-primary assign-btn" data-research-id="@research.Id" data-research-title="@research.Title">
+                                                <i class="fas fa-user-plus me-1"></i>تعيين
+                                            </button>
+                                            <a href="@Url.Action("ResearchDetails", new { id = research.Id })" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye me-1"></i>عرض
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5 class="text-muted">لا توجد بحوث منتظرة للتوزيع</h5>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>المراجعون المتاحون</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Reviewers.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var reviewer in Model.Reviewers)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-1">@reviewer.FirstName @reviewer.LastName</h6>
+                                    <span class="badge bg-info">@reviewer.Reviews.Count(r => !r.IsCompleted) معلقة</span>
+                                </div>
+                                <p class="mb-1 text-muted small">@reviewer.Email</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                        <h5 class="text-muted">لا يوجد مراجعون متاحون</h5>
+                        <a href="@Url.Action("Reviewers")" class="btn btn-primary mt-2">
+                            <i class="fas fa-plus me-1"></i>إضافة مراجعين
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Review Modal -->
+<div class="modal fade" id="assignReviewModal" tabindex="-1" aria-labelledby="assignReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AssignReview" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignReviewModalLabel">تعيين مراجع</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ResearchId" id="researchId" value="" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">البحث:</label>
+                        <div class="form-control" id="researchTitle" readonly></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">اختر المراجع:</label>
+                        <select name="ReviewerId" class="form-select" required>
+                            <option value="">-- اختر المراجع --</option>
+                            @foreach (var reviewer in Model.Reviewers)
+                            {
+                                <option value="@reviewer.Id">@reviewer.FirstName @reviewer.LastName</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">الموعد النهائي (بالأيام):</label>
+                        <input type="number" name="DeadlineDays" class="form-control" value="14" min="1" max="60" required />
+                        <div class="form-text">عدد الأيام من اليوم حتى الموعد النهائي للمراجعة</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تعيين المراجع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.assign-btn').click(function () {
+                var researchId = $(this).data('research-id');
+                var researchTitle = $(this).data('research-title');
+                
+                $('#researchId').val(researchId);
+                $('#researchTitle').text(researchTitle);
+                
+                $('#assignReviewModal').modal('show');
+            });
+        });
+    </script>
+}

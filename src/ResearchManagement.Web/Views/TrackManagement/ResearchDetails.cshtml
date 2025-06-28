@@ -1,0 +1,378 @@
+@model ResearchManagement.Web.Models.ViewModels.TrackResearchDetailsViewModel
+@{
+    ViewData["Title"] = "تفاصيل البحث";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "TrackManagement")">إدارة البحوث</a></li>
+                <li class="breadcrumb-item active" aria-current="page">تفاصيل البحث</li>
+            </ol>
+        </nav>
+        <h2>@Model.Research.Title</h2>
+        <p class="text-muted">تفاصيل البحث والمراجعات</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات البحث</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">العنوان:</div>
+                    <div class="col-md-9">@Model.Research.Title</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">العنوان (الإنجليزية):</div>
+                    <div class="col-md-9">@(string.IsNullOrEmpty(Model.Research.TitleEn) ? "-" : Model.Research.TitleEn)</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">الملخص:</div>
+                    <div class="col-md-9">@Model.Research.AbstractAr</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">الكلمات المفتاحية:</div>
+                    <div class="col-md-9">@Model.Research.Keywords</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">نوع البحث:</div>
+                    <div class="col-md-9">@Model.Research.ResearchType</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">التخصص:</div>
+                    <div class="col-md-9">@Model.Research.Track</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">اللغة:</div>
+                    <div class="col-md-9">@Model.Research.Language</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">تاريخ التقديم:</div>
+                    <div class="col-md-9">@Model.Research.SubmissionDate.ToString("yyyy/MM/dd")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">الحالة:</div>
+                    <div class="col-md-9">
+                        @{
+                            var statusClass = Model.Research.Status == ResearchManagement.Domain.Enums.ResearchStatus.Accepted ? "success" :
+                            Model.Research.Status == ResearchManagement.Domain.Enums.ResearchStatus.Rejected ? "danger" :
+                            Model.Research.Status == ResearchManagement.Domain.Enums.ResearchStatus.UnderReview ? "warning" : "secondary";
+                        }
+                        <span class="badge bg-@statusClass">@Model.Research.Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>المؤلفون</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>المؤسسة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var author in Model.Research.Authors.OrderBy(a => a.Order))
+                            {
+                                <tr>
+                                    <td>@author.Order</td>
+                                    <td>@author.FirstName @author.LastName</td>
+                                    <td>@author.Email</td>
+                                    <td>@author.Institution</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>الملفات</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Research.Files.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var file in Model.Research.Files)
+                        {
+                            <a href="@Url.Action("DownloadFile", "Research", new { id = file.Id })" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file me-2"></i>
+                                    @file.OriginalFileName
+                                    <small class="text-muted ms-2">(@file.FileType)</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">
+                                    <i class="fas fa-download"></i>
+                                </span>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">لا توجد ملفات مرفقة</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>المراجعات</h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignReviewModal">
+                    <i class="fas fa-plus me-1"></i>تعيين مراجع
+                </button>
+            </div>
+            <div class="card-body">
+                @if (Model.Reviews.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var review in Model.Reviews)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-1">@review.Reviewer.FirstName @review.Reviewer.LastName</h6>
+                                    @if (review.IsCompleted)
+                                    {
+                                        <span class="badge bg-success">مكتملة</span>
+                                    }
+                                    else if (review.Deadline < DateTime.UtcNow)
+                                    {
+                                        <span class="badge bg-danger">متأخرة</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">معلقة</span>
+                                    }
+                                </div>
+                                <p class="mb-1 text-muted small">تاريخ التعيين: @review.AssignedDate.ToString("yyyy/MM/dd")</p>
+                                <p class="mb-1 text-muted small">الموعد النهائي: @review.Deadline.ToString("yyyy/MM/dd")</p>
+                                
+                                @if (review.IsCompleted)
+                                {
+                                    <div class="mt-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span>التقييم الكلي:</span>
+                                            <span class="fw-bold">@review.OverallScore.ToString("0.0")/10</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>القرار:</span>
+                                            <span class="fw-bold">@review.Decision</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="#" class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#reviewDetailsModal-@review.Id">
+                                                <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Modal for Review Details -->
+                                    <div class="modal fade" id="reviewDetailsModal-@review.Id" tabindex="-1" aria-labelledby="reviewDetailsModalLabel-@review.Id" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="reviewDetailsModalLabel-@review.Id">تفاصيل المراجعة</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card">
+                                                                <div class="card-header">
+                                                                    <h6 class="mb-0">التقييمات</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <span>الأصالة:</span>
+                                                                        <span class="fw-bold">@review.OriginalityScore/10</span>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <span>المنهجية:</span>
+                                                                        <span class="fw-bold">@review.MethodologyScore/10</span>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <span>الوضوح:</span>
+                                                                        <span class="fw-bold">@review.ClarityScore/10</span>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <span>الأهمية:</span>
+                                                                        <span class="fw-bold">@review.SignificanceScore/10</span>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <span>المراجع:</span>
+                                                                        <span class="fw-bold">@review.ReferencesScore/10</span>
+                                                                    </div>
+                                                                    <hr />
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <span>التقييم الكلي:</span>
+                                                                        <span class="fw-bold">@review.OverallScore.ToString("0.0")/10</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card">
+                                                                <div class="card-header">
+                                                                    <h6 class="mb-0">القرار والتعليقات</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="mb-3">
+                                                                        <label class="fw-bold">القرار:</label>
+                                                                        <div>@review.Decision</div>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="fw-bold">تعليقات للمؤلف:</label>
+                                                                        <div>@(string.IsNullOrEmpty(review.CommentsToAuthor) ? "-" : review.CommentsToAuthor)</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label class="fw-bold">تعليقات لمدير التراك:</label>
+                                                                        <div>@(string.IsNullOrEmpty(review.CommentsToTrackManager) ? "-" : review.CommentsToTrackManager)</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-2">
+                                        <a href="#" class="btn btn-sm btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#sendReminderModal-@review.Id">
+                                            <i class="fas fa-bell me-1"></i>إرسال تذكير
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">لم يتم تعيين مراجعين بعد</p>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>إجراءات</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                        <i class="fas fa-edit me-1"></i>تحديث حالة البحث
+                    </button>
+                    <a href="@Url.Action("Index", "TrackManagement")" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Review Modal -->
+<div class="modal fade" id="assignReviewModal" tabindex="-1" aria-labelledby="assignReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AssignReview" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignReviewModalLabel">تعيين مراجع جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ResearchId" value="@Model.Research.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">اختر المراجع:</label>
+                        <select name="ReviewerId" class="form-select" required>
+                            <option value="">-- اختر المراجع --</option>
+                            @foreach (var reviewer in ViewBag.AvailableReviewers ?? new List<ResearchManagement.Domain.Entities.User>())
+                            {
+                                <option value="@reviewer.Id">@reviewer.FirstName @reviewer.LastName</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">الموعد النهائي (بالأيام):</label>
+                        <input type="number" name="DeadlineDays" class="form-control" value="14" min="1" max="60" required />
+                        <div class="form-text">عدد الأيام من اليوم حتى الموعد النهائي للمراجعة</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تعيين المراجع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateResearchStatus" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">تحديث حالة البحث</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ResearchId" value="@Model.Research.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">الحالة الجديدة:</label>
+                        <select name="Status" class="form-select" required>
+                            <option value="">-- اختر الحالة --</option>
+                            @foreach (var status in Enum.GetValues(typeof(ResearchManagement.Domain.Enums.ResearchStatus)))
+                            {
+                                <option value="@status" @(status.Equals(Model.Research.Status) ? "selected" : "")>@status</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات:</label>
+                        <textarea name="Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تحديث الحالة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log('Research Details loaded');
+        });
+    </script>
+}
