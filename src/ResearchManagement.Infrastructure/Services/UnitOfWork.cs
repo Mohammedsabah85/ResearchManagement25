@@ -24,6 +24,8 @@ namespace ResearchManagement.Infrastructure.Services
         private IReviewRepository? _reviews;
         private IResearchStatusHistoryRepository? _statusHistory;
         private IUserRepository? _users;
+        private ITrackManagerRepository? _trackManagers;
+        private IGenericRepository<TrackReviewer>? _trackReviewers;
 
         public UnitOfWork(ApplicationDbContext context, ILogger<UnitOfWork> logger, IServiceProvider serviceProvider)
         {
@@ -58,6 +60,11 @@ namespace ResearchManagement.Infrastructure.Services
             _statusHistory ??= new ResearchStatusHistoryRepository(_context);
 
         public IUserRepository Users => _users ??= new UserRepository(_context);
+        
+        public ITrackManagerRepository TrackManagers => _trackManagers ??= new TrackManagerRepository(_context);
+        
+        public IGenericRepository<TrackReviewer> TrackReviewers => 
+            _trackReviewers ??= new GenericRepository<TrackReviewer>(_context);
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

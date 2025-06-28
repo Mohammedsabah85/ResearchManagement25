@@ -19,6 +19,8 @@ namespace ResearchManagement.Application.Interfaces
         IReviewRepository Reviews { get; }
         IResearchStatusHistoryRepository StatusHistory { get; }
         IUserRepository Users { get; }
+        ITrackManagerRepository TrackManagers { get; }
+        IGenericRepository<TrackReviewer> TrackReviewers { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task BeginTransactionAsync();

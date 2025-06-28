@@ -41,6 +41,7 @@ namespace ResearchManagement.Web.Extensions
             services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IResearchStatusHistoryRepository, ResearchStatusHistoryRepository>();
+            services.AddScoped<ITrackManagerRepository, TrackManagerRepository>();
 
             return services;
         }

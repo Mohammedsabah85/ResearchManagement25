@@ -1,0 +1,87 @@
+@model ResearchManagement.Web.Models.ViewModels.TrackResearchesViewModel
+@{
+    ViewData["Title"] = "إدارة البحوث";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-tasks me-2"></i>إدارة بحوث تخصص @Model.TrackName</h2>
+        <p class="text-muted">عرض وإدارة البحوث المقدمة في التخصص</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>قائمة البحوث</h5>
+        <div>
+            <a href="@Url.Action("AssignReviews")" class="btn btn-primary">
+                <i class="fas fa-user-plus me-1"></i>توزيع المراجعات
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.Researches.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>العنوان</th>
+                            <th>الباحث</th>
+                            <th>تاريخ التقديم</th>
+                            <th>الحالة</th>
+                            <th>المراجعات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var research in Model.Researches)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@research.Title</strong>
+                                </td>
+                                <td>
+                                    @research.SubmittedBy.FirstName @research.SubmittedBy.LastName
+                                </td>
+                                <td>@research.SubmissionDate.ToString("yyyy/MM/dd")</td>
+                                <td>
+                                    @{
+                                        var statusClass = research.Status == ResearchManagement.Domain.Enums.ResearchStatus.Accepted ? "success" :
+                                        research.Status == ResearchManagement.Domain.Enums.ResearchStatus.Rejected ? "danger" :
+                                        research.Status == ResearchManagement.Domain.Enums.ResearchStatus.UnderReview ? "warning" : "secondary";
+                                    }
+                                    <span class="badge bg-@statusClass">@research.Status</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@research.Reviews.Count(r => r.IsCompleted)/@research.Reviews.Count</span>
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("ResearchDetails", new { id = research.Id })" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>عرض
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد بحوث في هذا التخصص</h5>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log('Track Management Index loaded');
+        });
+    </script>
+}

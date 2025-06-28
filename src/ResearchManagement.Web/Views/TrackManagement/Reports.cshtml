@@ -1,0 +1,302 @@
+@model ResearchManagement.Web.Models.ViewModels.TrackReportsViewModel
+@{
+    ViewData["Title"] = "تقارير التخصص";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "TrackManagement")">إدارة البحوث</a></li>
+                <li class="breadcrumb-item active" aria-current="page">تقارير التخصص</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-chart-bar me-2"></i>تقارير تخصص @Model.TrackName</h2>
+        <p class="text-muted">إحصائيات وتقارير عن البحوث في التخصص</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">@Model.TotalResearches</h3>
+                        <p class="mb-0">إجمالي البحوث</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-file-alt fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">@Model.AcceptedResearches</h3>
+                        <p class="mb-0">البحوث المقبولة</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">@Model.RejectedResearches</h3>
+                        <p class="mb-0">البحوث المرفوضة</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-times-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">@(Model.UnderReviewResearches + Model.UnderEvaluationResearches)</h3>
+                        <p class="mb-0">قيد المراجعة</p>
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-spinner fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>توزيع حالات البحوث</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="researchStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>البحوث حسب الشهر</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="researchByMonthChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>البحوث حسب النوع</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="researchByTypeChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>ملخص التقرير</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>إجمالي البحوث</th>
+                                <td>@Model.TotalResearches</td>
+                            </tr>
+                            <tr>
+                                <th>البحوث المقدمة</th>
+                                <td>@Model.SubmittedResearches</td>
+                            </tr>
+                            <tr>
+                                <th>قيد المراجعة</th>
+                                <td>@Model.UnderReviewResearches</td>
+                            </tr>
+                            <tr>
+                                <th>قيد التقييم</th>
+                                <td>@Model.UnderEvaluationResearches</td>
+                            </tr>
+                            <tr>
+                                <th>البحوث المقبولة</th>
+                                <td>@Model.AcceptedResearches</td>
+                            </tr>
+                            <tr>
+                                <th>البحوث المرفوضة</th>
+                                <td>@Model.RejectedResearches</td>
+                            </tr>
+                            <tr>
+                                <th>نسبة القبول</th>
+                                <td>
+                                    @{
+                                        var completedResearches = Model.AcceptedResearches + Model.RejectedResearches;
+                                        var acceptanceRate = completedResearches > 0 
+                                            ? (decimal)Model.AcceptedResearches / completedResearches * 100 
+                                            : 0;
+                                    }
+                                    @acceptanceRate.ToString("0.0")%
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-grid mt-3">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Status Chart
+            var statusCtx = document.getElementById('researchStatusChart').getContext('2d');
+            var statusChart = new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['مقدم', 'قيد المراجعة', 'قيد التقييم', 'مقبول', 'مرفوض'],
+                    datasets: [{
+                        data: [
+                            @Model.SubmittedResearches,
+                            @Model.UnderReviewResearches,
+                            @Model.UnderEvaluationResearches,
+                            @Model.AcceptedResearches,
+                            @Model.RejectedResearches
+                        ],
+                        backgroundColor: [
+                            '#6c757d',
+                            '#ffc107',
+                            '#17a2b8',
+                            '#28a745',
+                            '#dc3545'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // By Month Chart
+            var monthLabels = [@Html.Raw(string.Join(",", Model.ResearchesByMonth.Keys.Select(k => $"'{k}'")))]
+            var monthData = [@string.Join(",", Model.ResearchesByMonth.Values)]
+            
+            var monthCtx = document.getElementById('researchByMonthChart').getContext('2d');
+            var monthChart = new Chart(monthCtx, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'عدد البحوث',
+                        data: monthData,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // By Type Chart
+            var typeLabels = [@Html.Raw(string.Join(",", Model.ResearchesByType.Keys.Select(k => $"'{k}'")))]
+            var typeData = [@string.Join(",", Model.ResearchesByType.Values)]
+            
+            var typeCtx = document.getElementById('researchByTypeChart').getContext('2d');
+            var typeChart = new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: typeLabels,
+                    datasets: [{
+                        label: 'عدد البحوث',
+                        data: typeData,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
