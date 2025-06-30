@@ -1,5 +1,337 @@
 @model ResearchManagement.Web.Models.ViewModels.Review.ReviewListViewModel
 @{
+    ViewData["Title"] = "قائمة المراجعات";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-list me-2 text-primary"></i>قائمة المراجعات</h2>
+            <p class="text-muted">إدارة ومتابعة مراجعات الأبحاث العلمية</p>
+        </div>
+        <div class="col-md-4 text-end">
+            @if (Model.CanCreateReview)
+            {
+                <a asp-controller="Research" asp-action="Index" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>مراجعة بحث جديد
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">إجمالي المراجعات</h5>
+                            <h3 class="mb-0">@Model.Statistics.TotalReviews</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">قيد المراجعة</h5>
+                            <h3 class="mb-0">@Model.Statistics.PendingReviews</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">مكتملة</h5>
+                            <h3 class="mb-0">@Model.Statistics.CompletedReviews</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">متأخرة</h5>
+                            <h3 class="mb-0">@Model.Statistics.OverdueReviews</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>تصفية النتائج</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Filter.SearchTerm" class="form-label">البحث</label>
+                        <input asp-for="Filter.SearchTerm" class="form-control" placeholder="عنوان البحث...">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.Status" class="form-label">الحالة</label>
+                        <select asp-for="Filter.Status" class="form-select">
+                            <option value="">جميع الحالات</option>
+                            <option value="completed">مكتملة</option>
+                            <option value="pending">قيد المراجعة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Filter.Track" class="form-label">المسار</label>
+                        <select asp-for="Filter.Track" asp-items="Model.TrackOptions" class="form-select">
+                            <option value="">جميع المسارات</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.FromDate" class="form-label">من تاريخ</label>
+                        <input asp-for="Filter.FromDate" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.ToDate" class="form-label">إلى تاريخ</label>
+                        <input asp-for="Filter.ToDate" type="date" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>بحث
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>إعادة تعيين
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <select asp-for="Filter.PageSize" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                            <option value="10">10 عناصر</option>
+                            <option value="25">25 عنصر</option>
+                            <option value="50">50 عنصر</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reviews Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">المراجعات (@Model.Reviews.TotalCount)</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Reviews.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>عنوان البحث</th>
+                                <th>المؤلف</th>
+                                <th>المسار</th>
+                                <th>المراجع</th>
+                                <th>تاريخ التكليف</th>
+                                <th>الموعد النهائي</th>
+                                <th>الحالة</th>
+                                <th>التقييم</th>
+                                <th>القرار</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var review in Model.Reviews.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@review.ResearchTitle</div>
+                                        @if (!string.IsNullOrEmpty(review.ResearchTitleEn))
+                                        {
+                                            <small class="text-muted">@review.ResearchTitleEn</small>
+                                        }
+                                    </td>
+                                    <td>@review.ResearchAuthor</td>
+                                    <td>
+                                        <span class="badge bg-info">@review.TrackDisplayName</span>
+                                    </td>
+                                    <td>@review.ReviewerName</td>
+                                    <td>@review.AssignedDate.ToString("yyyy/MM/dd")</td>
+                                    <td>
+                                        @if (review.DueDate.HasValue)
+                                        {
+                                            <span class="@(review.IsOverdue ? "text-danger fw-bold" : "")">
+                                                @review.DueDate.Value.ToString("yyyy/MM/dd")
+                                            </span>
+                                            @if (review.IsOverdue)
+                                            {
+                                                <br>
+
+                                                <small class="text-danger">متأخر @review.DaysOverdue يوم</small>
+                                            }
+                                            else if (!review.IsCompleted)
+                                            {
+                                                <br>
+
+                                                <small class="text-muted">@review.DaysRemaining يوم متبقي</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">غير محدد</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @review.StatusBadgeClass">@review.StatusDisplayName</span>
+                                    </td>
+                                    <td>
+                                        @if (review.Score.HasValue)
+                                        {
+                                            <span class="fw-bold">@review.Score.Value/10</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (review.Decision.HasValue)
+                                        {
+                                            <span class="badge @review.DecisionBadgeClass">@review.DecisionDisplayName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@review.Id"
+                                               class="btn btn-outline-primary" title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if ((Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.Reviewer && review.ReviewerId == Model.CurrentUserId && !review.IsCompleted) ||
+                                           Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.TrackManager ||
+                                           Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.ConferenceManager)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@review.Id"
+                                                   class="btn btn-outline-warning" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.Reviews.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav>
+                   @*          <ul class="pagination justify-content-center mb-0">
+                                @if (Model.Reviews.HasPreviousPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.Reviews.PageNumber - 1)" asp-all-route-data="@ViewContext.RouteData.Values">السابق</a>
+                                    </li>
+                                }
+
+                                @for (int i = Math.Max(1, Model.Reviews.PageNumber - 2); i <= Math.Min(Model.Reviews.TotalPages, Model.Reviews.PageNumber + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.Reviews.PageNumber ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-all-route-data="@ViewContext.RouteData.Values">@i</a>
+                                    </li>
+                                }
+
+                                @if (Model.Reviews.HasNextPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.Reviews.PageNumber + 1)" asp-all-route-data="@ViewContext.RouteData.Values">التالي</a>
+                                    </li>
+                                }
+                            </ul> *@
+                        </nav>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5>لا توجد مراجعات</h5>
+                    <p class="text-muted">لم يتم العثور على مراجعات تطابق معايير البحث.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .table th {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge {
+            font-size: 0.8em;
+        }
+
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.4rem;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .table-responsive {
+            border-radius: 0;
+        }
+
+        .pagination .page-link {
+            color: #495057;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
+}
+
+
+@* @model ResearchManagement.Web.Models.ViewModels.Review.ReviewListViewModel
+@{
     ViewData["Title"] = "إدارة المراجعات";
 }
 
@@ -290,7 +622,7 @@
             }
         </div>
     </div>
-</div>
+</div> *@
 
 @section Scripts {
     <script>

@@ -1,0 +1,384 @@
+﻿@using ResearchManagement.Domain.Enums
+@using ResearchManagement.Application.DTOs
+
+@model ResearchManagement.Web.Models.ViewModels.Review.ReviewDetailsViewModel
+@{
+    ViewData["Title"] = "تفاصيل المراجعة";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-eye me-2 text-primary"></i>تفاصيل المراجعة</h2>
+            <p class="text-muted">عرض تفاصيل ونتائج مراجعة البحث العلمي</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+            </a>
+            @if (Model.CanEdit)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Review.Id" class="btn btn-outline-warning">
+                    <i class="fas fa-edit me-2"></i>تعديل المراجعة
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Research Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>معلومات البحث</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">@Model.Research.Title</h6>
+                    @if (!string.IsNullOrEmpty(Model.Research.TitleEn))
+                    {
+                        <p class="text-muted small">@Model.Research.TitleEn</p>
+                    }
+
+                    <div class="mb-3">
+                        <strong>المؤلفون:</strong>
+                        @if (Model.Research.Authors != null && Model.Research.Authors.Any())
+                        {
+                            <ul class="list-unstyled mt-1">
+                                @foreach (var author in Model.Research.Authors)
+                                {
+                                    <li class="small">
+                                        <i class="fas fa-user me-1"></i>
+                                        @author.FirstName @author.LastName
+                                        @if (author.IsCorresponding)
+                                        {
+                                            <span class="badge bg-primary ms-1">مراسل</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>المسار:</strong>
+                        <span class="badge bg-info ms-1">@Model.Research.Track.ToString()</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>نوع البحث:</strong>
+                        <span class="text-muted">@Model.Research.ResearchType.ToString()</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>تاريخ التقديم:</strong>
+                        <span class="text-muted">@Model.Research.SubmissionDate.ToString("yyyy/MM/dd")</span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Research.AbstractAr))
+                    {
+                        <div class="mb-3">
+                            <strong>الملخص:</strong>
+                            <div class="border rounded p-2 bg-light small" style="max-height: 150px; overflow-y: auto;">
+                                @Model.Research.AbstractAr
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Research.Files != null && Model.Research.Files.Any())
+                    {
+                        <div class="mb-3">
+                            <strong>الملفات:</strong>
+                            <div class="list-group list-group-flush">
+                                @foreach (var file in Model.Research.Files)
+                                {
+                                    <div class="list-group-item px-0 py-2">
+                                        <a asp-controller="Research" asp-action="DownloadFile" asp-route-fileId="@file.Id"
+                                           class="text-decoration-none" target="_blank">
+                                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                                            @file.OriginalFileName
+                                        </a>
+                                        @if (!string.IsNullOrEmpty(file.Description))
+                                        {
+                                            <small class="text-muted d-block">@file.Description</small>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Details -->
+        <div class="col-lg-8">
+            <!-- Review Status -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>حالة المراجعة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>المراجع:</strong>
+                                <span class="text-muted">@Model.ReviewerName</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>تاريخ التكليف:</strong>
+                                <span class="text-muted">@Model.Review.AssignedDate.ToString("yyyy/MM/dd")</span>
+                            </div>
+                       @*      @if (Model.Review.Deadline.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <strong>الموعد النهائي:</strong>
+                                    <span class="@(Model.IsLateSubmission ? "text-danger" : "text-success")">
+                                        @Model.Review.Deadline.Value.ToString("yyyy/MM/dd")
+                                    </span>
+                                </div>
+                            } *@
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>حالة المراجعة:</strong>
+                                @if (Model.Review.IsCompleted)
+                                {
+                                    <span class="badge bg-success">مكتملة</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">قيد المراجعة</span>
+                                }
+                            </div>
+                            @if (Model.Review.CompletedDate.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <strong>تاريخ الإكمال:</strong>
+                                    <span class="text-muted">@Model.Review.CompletedDate.Value.ToString("yyyy/MM/dd")</span>
+                                </div>
+                            }
+                            @if (Model.Review.RequiresReReview)
+                            {
+                                <div class="mb-3">
+                                    <span class="badge bg-info">يتطلب مراجعة إضافية</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Review.IsCompleted)
+            {
+                <!-- Review Scores -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>نتائج التقييم</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Overall Score -->
+                        <div class="alert alert-primary mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <h6 class="mb-0">التقييم الإجمالي:</h6>
+                                    <span class="fs-3 text-primary">@Model.OverallScore.ToString("0.0")</span>/10
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>التقدير:</strong>
+                                    <span class="badge bg-secondary">@Model.OverallScoreDisplayName</span>
+                                </div>
+                                <div class="col-md-4">
+                                    @{
+                                        var progressWidth = Model.OverallScore * 10;
+                                        var progressClass = Model.OverallScore >= 7 ? "bg-success" : Model.OverallScore >= 5 ? "bg-warning" : "bg-danger";
+                                    }
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @progressClass" style="width: @progressWidth%">
+                                            @Model.OverallScore.ToString("0.0")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Scores -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>الأصالة:</strong>
+                                        <span class="badge bg-primary">
+                                            @(Model.Review.OriginalityScore > 0 ? Model.Review.OriginalityScore : 0)/10
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        @{
+                                            var originalityWidth = Model.Review.OriginalityScore > 0 ? Model.Review.OriginalityScore * 10 : 0;
+                                        }
+                                        <div class="progress-bar" style="width: @originalityWidth%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>المنهجية:</strong>
+                                        <span class="badge bg-primary">
+                                            @(Model.Review.MethodologyScore > 0 ? Model.Review.MethodologyScore : 0)/10
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        @{
+                                            var methodologyWidth = Model.Review.MethodologyScore > 0 ? Model.Review.MethodologyScore * 10 : 0;
+                                        }
+                                        <div class="progress-bar" style="width: @methodologyWidth%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>الوضوح:</strong>
+                                        <span class="badge bg-primary">
+                                            @(Model.Review.ClarityScore > 0 ? Model.Review.ClarityScore : 0)/10
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        @{
+                                            var clarityWidth = Model.Review.ClarityScore > 0 ? Model.Review.ClarityScore * 10 : 0;
+                                        }
+                                        <div class="progress-bar" style="width: @clarityWidth%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>الأهمية:</strong>
+                                        <span class="badge bg-primary">
+                                            @(Model.Review.SignificanceScore > 0 ? Model.Review.SignificanceScore : 0)/10
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        @{
+                                            var significanceWidth = Model.Review.SignificanceScore > 0 ? Model.Review.SignificanceScore * 10 : 0;
+                                        }
+                                        <div class="progress-bar" style="width: @significanceWidth%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decision -->
+                        <div class="mb-3">
+                            <strong>القرار النهائي:</strong>
+                            @{
+                                string decisionBadgeClass = "bg-secondary";
+                                string decisionText = "غير محدد";
+
+                                switch (Model.Review.Decision)
+                                {
+                                    case ResearchManagement.Domain.Enums.ReviewDecision.AcceptAsIs:
+                                        decisionBadgeClass = "bg-success";
+                                        decisionText = "قبول البحث";
+                                        break;
+                                    case ResearchManagement.Domain.Enums.ReviewDecision.Reject:
+                                        decisionBadgeClass = "bg-danger";
+                                        decisionText = "رفض البحث";
+                                        break;
+                                    case ResearchManagement.Domain.Enums.ReviewDecision.AcceptWithMinorRevisions:
+                                        decisionBadgeClass = "bg-info";
+                                        decisionText = "قبول مع تعديلات طفيفة";
+                                        break;
+                                    case ResearchManagement.Domain.Enums.ReviewDecision.MajorRevisionsRequired:
+                                        decisionBadgeClass = "bg-warning";
+                                        decisionText = "قبول مع تعديلات جوهرية";
+                                        break;
+                                }
+                            }
+                            <span class="badge @decisionBadgeClass ms-2">@decisionText</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-comments me-2"></i>التعليقات</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.Review.CommentsToAuthor))
+                        {
+                            <div class="mb-3">
+                                <h6 class="text-primary">تعليقات للمؤلف:</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    @Html.Raw(Model.Review.CommentsToAuthor.Replace("\n", "<br>"))
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Review.CommentsToTrackManager) &&
+                       (Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.TrackManager ||
+                       Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.ConferenceManager ||
+                       Model.CurrentUserRole == ResearchManagement.Domain.Enums.UserRole.SystemAdmin))
+                        {
+                            <div class="mb-3">
+                                <h6 class="text-warning">تعليقات لمدير المسار (سرية):</h6>
+                                <div class="border rounded p-3 bg-warning bg-opacity-10">
+                                    @Html.Raw(Model.Review.CommentsToTrackManager.Replace("\n", "<br>"))
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Pending Review Message -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                        <h5>المراجعة قيد الإنجاز</h5>
+                        <p class="text-muted">لم يتم إكمال هذه المراجعة بعد.</p>
+                        @if (Model.CanEdit)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Review.Id" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>إكمال المراجعة
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .progress {
+            height: 8px;
+        }
+
+        .card-header h5 {
+            color: #495057;
+        }
+
+        .badge {
+            font-size: 0.85em;
+        }
+
+        .bg-opacity-10 {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        .list-group-item {
+            border: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+            .list-group-item:last-child {
+                border-bottom: none;
+            }
+    </style>
+}

@@ -7,7 +7,7 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
 {
     public class ReviewListViewModel
     {
-        public PagedResult<ReviewItemViewModel> Reviews { get; set; } = new();
+        public ReviewPagedResult<ReviewItemViewModel> Reviews { get; set; } = new();
         public ReviewFilterViewModel Filter { get; set; } = new();
         public ReviewStatisticsViewModel Statistics { get; set; } = new();
         public List<SelectListItem> TrackOptions { get; set; } = new();
@@ -29,7 +29,6 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
         public string SortBy { get; set; } = "AssignedDate";
         public bool SortDescending { get; set; } = true;
     }
-
     public class ReviewItemViewModel
     {
         public int Id { get; set; }
@@ -40,27 +39,70 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
         public ResearchTrack Track { get; set; }
         public string ReviewerId { get; set; } = string.Empty;
         public string ReviewerName { get; set; } = string.Empty;
+
         public DateTime AssignedDate { get; set; }
-        public DateTime? DueDate { get; set; }
-        public DateTime? CompletedDate { get; set; }
+        public DateTime? DueDate { get; set; }        // nullable ✓
+        public DateTime? CompletedDate { get; set; }  // nullable ✓
+        public string TrackDisplayName { get; set; } // <-- Add this line
+
         public bool IsCompleted { get; set; }
-        public bool IsOverdue => DueDate.HasValue && !IsCompleted && DateTime.UtcNow > DueDate.Value;
+        public bool IsOverdue => DueDate.HasValue && !IsCompleted && DateTime.UtcNow > DueDate.Value; // استخدم DueDate.HasValue
         public int? Score { get; set; }
         public ReviewDecision? Decision { get; set; }
         public string? CommentsToAuthor { get; set; }
         public string? CommentsToTrackManager { get; set; }
 
-        public string TrackDisplayName => Track switch
+        // الخصائص المحسوبة المُصححة:
+        public int DaysRemaining
         {
-            ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
-            ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
-            ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
-            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
-            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
-            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
-            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
-            _ => "غير محدد"
-        };
+            get
+            {
+                if (!DueDate.HasValue || IsCompleted) return 0;
+                return Math.Max(0, (DueDate.Value - DateTime.UtcNow).Days);
+            }
+        }
+
+        public int DaysOverdue
+        {
+            get
+            {
+                if (!IsOverdue) return 0;
+                return (DateTime.UtcNow - DueDate!.Value).Days;
+            }
+        }
+    
+
+    //public class ReviewItemViewModel
+    //{
+    //    public int Id { get; set; }
+    //    public int ResearchId { get; set; }
+    //    public string ResearchTitle { get; set; } = string.Empty;
+    //    public string? ResearchTitleEn { get; set; }
+    //    public string ResearchAuthor { get; set; } = string.Empty;
+    //    public ResearchTrack Track { get; set; }
+    //    public string ReviewerId { get; set; } = string.Empty;
+    //    public string ReviewerName { get; set; } = string.Empty;
+    //    public DateTime AssignedDate { get; set; }
+    //    public DateTime? DueDate { get; set; }
+    //    public DateTime? CompletedDate { get; set; }
+    //    public bool IsCompleted { get; set; }
+    //    public bool IsOverdue => DueDate.HasValue && !IsCompleted && DateTime.UtcNow > DueDate.Value;
+    //    public int? Score { get; set; }
+    //    public ReviewDecision? Decision { get; set; }
+    //    public string? CommentsToAuthor { get; set; }
+    //    public string? CommentsToTrackManager { get; set; }
+
+    //    public string TrackDisplayName => Track switch
+    //    {
+    //        ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+    //        ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+    //        ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+    //        ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+    //        ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+    //        ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+    //        ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
+    //        _ => "غير محدد"
+    //    };
 
         public string StatusDisplayName
         {
@@ -100,23 +142,7 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
             _ => "badge-secondary"
         };
 
-        public int DaysRemaining
-        {
-            get
-            {
-                if (!DueDate.HasValue || IsCompleted) return 0;
-                return Math.Max(0, (DueDate.Value - DateTime.UtcNow).Days);
-            }
-        }
-
-        public int DaysOverdue
-        {
-            get
-            {
-                if (!IsOverdue) return 0;
-                return (DateTime.UtcNow - DueDate!.Value).Days;
-            }
-        }
+ 
     }
 
     public class ReviewStatisticsViewModel
@@ -151,5 +177,15 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
         public int CompletedReviews { get; set; }
         public double AverageScore { get; set; }
         public string MonthName => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+    }
+    public class ReviewPagedResult<T>
+    {
+        public List<T> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasNextPage => PageNumber < TotalPages;
+        public bool HasPreviousPage => PageNumber > 1;
     }
 }

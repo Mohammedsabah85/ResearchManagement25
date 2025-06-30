@@ -38,7 +38,7 @@ namespace ResearchManagement.Domain.Entities
 
         public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedDate { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
 
         public bool IsCompleted { get; set; } = false;
         public bool RequiresReReview { get; set; } = false;

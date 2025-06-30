@@ -24,13 +24,19 @@ namespace ResearchManagement.Application.DTOs
         public string? Recommendations { get; set; }
         public DateTime AssignedDate { get; set; }
         public DateTime? CompletedDate { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public bool IsCompleted { get; set; }
         public bool RequiresReReview { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+
+
+
+ 
+
+
 
         // Additional properties for UI
         public string DecisionDisplayName => Decision switch
@@ -48,7 +54,7 @@ namespace ResearchManagement.Application.DTOs
 
         public bool IsOverdue => !IsCompleted && DateTime.UtcNow > Deadline;
 
-        public int DaysRemaining => IsCompleted ? 0 : Math.Max(0, (Deadline - DateTime.UtcNow).Days);
+        public int DaysRemaining => IsCompleted ? 0 : Math.Max(0, ((Deadline.HasValue ? Deadline.Value - DateTime.UtcNow : TimeSpan.Zero).Days));
 
         public string UrgencyLevel
         {

@@ -53,7 +53,7 @@ namespace ResearchManagement.Infrastructure.Services
             var upcomingReviewDeadlines = await context.Reviews
                 .Include(r => r.Reviewer)
                 .Include(r => r.Research)
-                .Where(r => !r.IsCompleted && r.Deadline.Date == tomorrow)
+                .Where(r => !r.IsCompleted && r.Deadline.HasValue && r.Deadline.Value.Date == tomorrow)
                 .ToListAsync();
 
             foreach (var review in upcomingReviewDeadlines)
@@ -69,7 +69,7 @@ namespace ResearchManagement.Infrastructure.Services
             var overdueReviews = await context.Reviews
                 .Include(r => r.Reviewer)
                 .Include(r => r.Research)
-                .Where(r => !r.IsCompleted && r.Deadline < DateTime.UtcNow)
+                .Where(r => !r.IsCompleted && r.Deadline.HasValue && r.Deadline.Value < DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var review in overdueReviews)

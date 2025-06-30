@@ -144,7 +144,7 @@
                                                 var isOverdue = review.Deadline < DateTime.UtcNow && !review.IsCompleted;
                                                 var deadlineClass = isOverdue ? "text-danger" : "text-muted";
                                             }
-                                            <span class="@deadlineClass">@review.Deadline.ToString("yyyy/MM/dd")</span>
+                                            <span class="@deadlineClass">@review.Deadline</span>
                                             @if (isOverdue)
                                             {
                                                 <i class="fas fa-exclamation-triangle text-danger ms-1"></i>

@@ -160,7 +160,7 @@
                     </div>
                     <div class="card-body">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
+@* 
                         <!-- Originality -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">الأصالة والجدة (25%)</label>
@@ -168,7 +168,7 @@
                                 <div class="btn-group" role="group" data-rating="originality">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                     @*    <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i" @(Model.OriginalityScore == i ? "checked" : "")> *@
+                                        <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i" @(Model.OriginalityScore == i ? "checked" : "")>
                                         <label class="btn btn-outline-primary btn-sm @(Model.OriginalityScore == i ? "active" : "")" for="originality@i">@i</label>
                                     }
                                 </div>
@@ -185,7 +185,7 @@
                                 <div class="btn-group" role="group" data-rating="methodology">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        @* <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i" @(Model.MethodologyScore == i ? "checked" : "")> *@
+                                        <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i" @(Model.MethodologyScore == i ? "checked" : "")>
                                         <label class="btn btn-outline-primary btn-sm @(Model.MethodologyScore == i ? "active" : "")" for="methodology@i">@i</label>
                                     }
                                 </div>
@@ -202,7 +202,7 @@
                                 <div class="btn-group" role="group" data-rating="results">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                      @*   <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i" @(Model.ResultsScore == i ? "checked" : "")> *@
+                                        <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i" @(Model.ResultsScore == i ? "checked" : "")>
                                         <label class="btn btn-outline-primary btn-sm @(Model.ResultsScore == i ? "active" : "")" for="results@i">@i</label>
                                     }
                                 </div>
@@ -219,7 +219,7 @@
                                 <div class="btn-group" role="group" data-rating="writing">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        @* <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i" @(Model.WritingScore == i ? "checked" : "")> *@
+                                        <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i" @(Model.WritingScore == i ? "checked" : "")>
                                         <label class="btn btn-outline-primary btn-sm @(Model.WritingScore == i ? "active" : "")" for="writing@i">@i</label>
                                     }
                                 </div>
@@ -227,7 +227,95 @@
                             <textarea asp-for="WritingComments" class="form-control" rows="2" 
                                       placeholder="تعليقات على جودة الكتابة...">@Model.WritingComments</textarea>
                             <span asp-validation-for="WritingComments" class="text-danger"></span>
+                        </div> *@
+
+
+                        <!-- Fixed Radio Button Sections -->
+                        <!-- Originality Score -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">الأصالة والجدة (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="originality">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i">
+                                        <label class="btn btn-outline-primary btn-sm" for="originality@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <span asp-validation-for="OriginalityScore" class="text-danger"></span>
+                            <textarea asp-for="OriginalityComments" class="form-control" rows="2"
+                                      placeholder="تعليقات على الأصالة والجدة..."></textarea>
+                            <span asp-validation-for="OriginalityComments" class="text-danger"></span>
                         </div>
+
+                        <!-- Methodology Score -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">المنهجية والطريقة (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="methodology">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i">
+                                        <label class="btn btn-outline-primary btn-sm" for="methodology@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <span asp-validation-for="MethodologyScore" class="text-danger"></span>
+                            <textarea asp-for="MethodologyComments" class="form-control" rows="2"
+                                      placeholder="تعليقات على المنهجية..."></textarea>
+                            <span asp-validation-for="MethodologyComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Results Score -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">النتائج والتحليل (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="results">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i">
+                                        <label class="btn btn-outline-primary btn-sm" for="results@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <span asp-validation-for="ResultsScore" class="text-danger"></span>
+                            <textarea asp-for="ResultsComments" class="form-control" rows="2"
+                                      placeholder="تعليقات على النتائج والتحليل..."></textarea>
+                            <span asp-validation-for="ResultsComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Writing Quality Score -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">جودة الكتابة والعرض (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="writing">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i">
+                                        <label class="btn btn-outline-primary btn-sm" for="writing@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <span asp-validation-for="WritingScore" class="text-danger"></span>
+                            <textarea asp-for="WritingComments" class="form-control" rows="2"
+                                      placeholder="تعليقات على جودة الكتابة..."></textarea>
+                            <span asp-validation-for="WritingComments" class="text-danger"></span>
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                         <!-- Overall Score Display -->
                         <div class="alert alert-primary">
@@ -271,18 +359,18 @@
                             <span asp-validation-for="CommentsToTrackManager" class="text-danger"></span>
                             <div class="form-text">هذه التعليقات سرية ولن تكون مرئية للمؤلف</div>
                         </div>
-
                         <div class="mb-3">
                             <label asp-for="Decision" class="form-label">القرار النهائي *</label>
-                            <select asp-for="Decision" class="form-select">
-                                <option value="">اختر القرار</option>
-                  @*               <option value="1" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.AcceptA? "selected" : "")>قبول البحث</option>
-                                <option value="2" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.Reject ? "selected" : "")>رفض البحث</option>
-                                <option value="3" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.AcceptWithMinorRevisions ? "selected" : "")>قبول مع تعديلات طفيفة</option>
-                                <option value="4" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.MajorRevisionsRequired ? "selected" : "")>قبول مع تعديلات جوهرية</option> *@
-                            </select>
+                            <select asp-for="Decision" asp-items="Model.DecisionOptions" class="form-select"></select>
                             <span asp-validation-for="Decision" class="text-danger"></span>
                         </div>
+
+                      @*   <div class="mb-3">
+                            <label asp-for="Decision" class="form-label">القرار النهائي *</label>
+                            <select asp-for="Decision" asp-items="Model.DecisionOptions" class="form-select"></select>
+                      
+                            <span asp-validation-for="Decision" class="text-danger"></span>
+                        </div> *@
 
                         <div class="mb-3">
                             <label asp-for="Recommendations" class="form-label">التوصيات</label>
@@ -337,7 +425,42 @@
             
             // Set up event handlers
             setupEventHandlers();
+                     if (@Model.OriginalityScore > 0) {
+                $('input[name="OriginalityScore"][value="@Model.OriginalityScore"]').prop('checked', true);
+            }
+            if (@Model.MethodologyScore > 0) {
+                $('input[name="MethodologyScore"][value="@Model.MethodologyScore"]').prop('checked', true);
+            }
+            if (@Model.ResultsScore > 0) {
+                $('input[name="ResultsScore"][value="@Model.ResultsScore"]').prop('checked', true);
+            }
+            if (@Model.WritingScore > 0) {
+                $('input[name="WritingScore"][value="@Model.WritingScore"]').prop('checked', true);
+            }
+
+            // Set initial decision value
+            $('select[name="Decision"]').val('@((int)Model.Decision)');
         });
+
+        //         $(document).ready(function() {
+        //     // Set initial values for radio buttons
+        //     if (@Model.OriginalityScore > 0) {
+        //         $('input[name="OriginalityScore"][value="@Model.OriginalityScore"]').prop('checked', true);
+        //     }
+        //     if (@Model.MethodologyScore > 0) {
+        //         $('input[name="MethodologyScore"][value="@Model.MethodologyScore"]').prop('checked', true);
+        //     }
+        //     if (@Model.ResultsScore > 0) {
+        //         $('input[name="ResultsScore"][value="@Model.ResultsScore"]').prop('checked', true);
+        //     }
+        //     if (@Model.WritingScore > 0) {
+        //         $('input[name="WritingScore"][value="@Model.WritingScore"]').prop('checked', true);
+        //     }
+
+        //     // Set initial decision value
+        //     $('select[name="Decision"]').val('@((int)Model.Decision)');
+        // });
+
 
         function initializeEditForm() {
             // Highlight selected ratings

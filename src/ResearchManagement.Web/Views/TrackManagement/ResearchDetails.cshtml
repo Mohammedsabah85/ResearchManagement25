@@ -359,7 +359,7 @@
                                     <div class="col-6">
                                         <div class="text-muted">الموعد النهائي</div>
                                         <strong class="@(review.Deadline < DateTime.UtcNow && !review.IsCompleted ? "text-danger" : "")">
-                                            @review.Deadline.ToString("MM/dd")
+                                            @review.Deadline
                                         </strong>
                                     </div>
                                 </div>
