@@ -75,11 +75,15 @@
                             </span>
                             @if (Model.IsOverdue())
                             {
-                                <br><small class="text-danger">⚠️ متأخر @Model.GetDaysToComplete() يوم</small>
+                                <br>
+
+                                <small class="text-danger">⚠️ متأخر @Model.GetDaysToComplete() يوم</small>
                             }
                             else
                             {
-                                <br><small class="text-muted">@Model.GetDaysToComplete() يوم متبقي</small>
+                                <br>
+
+                                <small class="text-muted">@Model.GetDaysToComplete() يوم متبقي</small>
                             }
                         }
                         else
@@ -103,7 +107,7 @@
                                 @foreach (var file in Model.Research.Files)
                                 {
                                     <div class="list-group-item px-0 py-2">
-                                        <a asp-controller="Research" asp-action="DownloadFile" asp-route-fileId="@file.Id" 
+                                        <a asp-controller="Research" asp-action="DownloadFile" asp-route-fileId="@file.Id"
                                            class="text-decoration-none" target="_blank">
                                             <i class="fas fa-file-pdf me-2 text-danger"></i>
                                             @file.OriginalFileName
@@ -133,7 +137,7 @@
                             </h6>
                             <div class="row">
                                 <div class="col-6">
-                                    <strong>التقييم الحالي:</strong> 
+                                    <strong>التقييم الحالي:</strong>
                                     <span class="fs-5 text-primary">@Model.OverallScore.ToString("0.0")</span>/10
                                 </div>
                                 <div class="col-6">
@@ -144,7 +148,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="progress" style="height: 20px;">
-                                <div class="progress-bar @(Model.OverallScore >= 7 ? "bg-success" : Model.OverallScore >= 5 ? "bg-warning" : "bg-danger")" 
+                                <div class="progress-bar @(Model.OverallScore >= 7 ? "bg-success" : Model.OverallScore >= 5 ? "bg-warning" : "bg-danger")"
                                      style="width: @(Model.OverallScore * 10)%">
                                     @Model.OverallScoreDisplayName
                                 </div>
@@ -160,162 +164,90 @@
                     </div>
                     <div class="card-body">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-@* 
-                        <!-- Originality -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">الأصالة والجدة (25%)</label>
-                            <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="originality">
-                                    @for (int i = 1; i <= 10; i++)
-                                    {
-                                        <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i" @(Model.OriginalityScore == i ? "checked" : "")>
-                                        <label class="btn btn-outline-primary btn-sm @(Model.OriginalityScore == i ? "active" : "")" for="originality@i">@i</label>
-                                    }
-                                </div>
-                            </div>
-                            <textarea asp-for="OriginalityComments" class="form-control" rows="2" 
-                                      placeholder="تعليقات على الأصالة والجدة...">@Model.OriginalityComments</textarea>
-                            <span asp-validation-for="OriginalityComments" class="text-danger"></span>
-                        </div>
 
-                        <!-- Methodology -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">المنهجية والطريقة (25%)</label>
-                            <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="methodology">
-                                    @for (int i = 1; i <= 10; i++)
-                                    {
-                                        <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i" @(Model.MethodologyScore == i ? "checked" : "")>
-                                        <label class="btn btn-outline-primary btn-sm @(Model.MethodologyScore == i ? "active" : "")" for="methodology@i">@i</label>
-                                    }
-                                </div>
-                            </div>
-                            <textarea asp-for="MethodologyComments" class="form-control" rows="2" 
-                                      placeholder="تعليقات على المنهجية...">@Model.MethodologyComments</textarea>
-                            <span asp-validation-for="MethodologyComments" class="text-danger"></span>
-                        </div>
-
-                        <!-- Results -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">النتائج والتحليل (25%)</label>
-                            <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="results">
-                                    @for (int i = 1; i <= 10; i++)
-                                    {
-                                        <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i" @(Model.ResultsScore == i ? "checked" : "")>
-                                        <label class="btn btn-outline-primary btn-sm @(Model.ResultsScore == i ? "active" : "")" for="results@i">@i</label>
-                                    }
-                                </div>
-                            </div>
-                            <textarea asp-for="ResultsComments" class="form-control" rows="2" 
-                                      placeholder="تعليقات على النتائج والتحليل...">@Model.ResultsComments</textarea>
-                            <span asp-validation-for="ResultsComments" class="text-danger"></span>
-                        </div>
-
-                        <!-- Writing Quality -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">جودة الكتابة والعرض (25%)</label>
-                            <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="writing">
-                                    @for (int i = 1; i <= 10; i++)
-                                    {
-                                        <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i" @(Model.WritingScore == i ? "checked" : "")>
-                                        <label class="btn btn-outline-primary btn-sm @(Model.WritingScore == i ? "active" : "")" for="writing@i">@i</label>
-                                    }
-                                </div>
-                            </div>
-                            <textarea asp-for="WritingComments" class="form-control" rows="2" 
-                                      placeholder="تعليقات على جودة الكتابة...">@Model.WritingComments</textarea>
-                            <span asp-validation-for="WritingComments" class="text-danger"></span>
-                        </div> *@
-
-
-                        <!-- Fixed Radio Button Sections -->
                         <!-- Originality Score -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">الأصالة والجدة (25%)</label>
                             <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="originality">
+                                <div class="btn-group" role="group">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i">
-                                        <label class="btn btn-outline-primary btn-sm" for="originality@i">@i</label>
+                                        var radioId = $"originality_{i}";
+                                        <input type="radio" name="OriginalityScore" value="@i" id="@radioId" class="btn-check">
+                                        <label class="btn btn-outline-primary btn-sm" for="@radioId">@i</label>
                                     }
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">القيمة المحددة: <span id="originalityDisplay">@Model.OriginalityScore</span></small>
                                 </div>
                             </div>
                             <span asp-validation-for="OriginalityScore" class="text-danger"></span>
                             <textarea asp-for="OriginalityComments" class="form-control" rows="2"
                                       placeholder="تعليقات على الأصالة والجدة..."></textarea>
-                            <span asp-validation-for="OriginalityComments" class="text-danger"></span>
                         </div>
 
                         <!-- Methodology Score -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">المنهجية والطريقة (25%)</label>
                             <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="methodology">
+                                <div class="btn-group" role="group">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i">
-                                        <label class="btn btn-outline-primary btn-sm" for="methodology@i">@i</label>
+                                        var radioId = $"methodology_{i}";
+                                        <input type="radio" name="MethodologyScore" value="@i" id="@radioId" class="btn-check">
+                                        <label class="btn btn-outline-primary btn-sm" for="@radioId">@i</label>
                                     }
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">القيمة المحددة: <span id="methodologyDisplay">@Model.MethodologyScore</span></small>
                                 </div>
                             </div>
                             <span asp-validation-for="MethodologyScore" class="text-danger"></span>
                             <textarea asp-for="MethodologyComments" class="form-control" rows="2"
                                       placeholder="تعليقات على المنهجية..."></textarea>
-                            <span asp-validation-for="MethodologyComments" class="text-danger"></span>
                         </div>
 
                         <!-- Results Score -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">النتائج والتحليل (25%)</label>
                             <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="results">
+                                <div class="btn-group" role="group">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i">
-                                        <label class="btn btn-outline-primary btn-sm" for="results@i">@i</label>
+                                        var radioId = $"results_{i}";
+                                        <input type="radio" name="ResultsScore" value="@i" id="@radioId" class="btn-check">
+                                        <label class="btn btn-outline-primary btn-sm" for="@radioId">@i</label>
                                     }
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">القيمة المحددة: <span id="resultsDisplay">@Model.ResultsScore</span></small>
                                 </div>
                             </div>
                             <span asp-validation-for="ResultsScore" class="text-danger"></span>
                             <textarea asp-for="ResultsComments" class="form-control" rows="2"
                                       placeholder="تعليقات على النتائج والتحليل..."></textarea>
-                            <span asp-validation-for="ResultsComments" class="text-danger"></span>
                         </div>
 
                         <!-- Writing Quality Score -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">جودة الكتابة والعرض (25%)</label>
                             <div class="rating-container mb-2">
-                                <div class="btn-group" role="group" data-rating="writing">
+                                <div class="btn-group" role="group">
                                     @for (int i = 1; i <= 10; i++)
                                     {
-                                        <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i">
-                                        <label class="btn btn-outline-primary btn-sm" for="writing@i">@i</label>
+                                        var radioId = $"writing_{i}";
+                                        <input type="radio" name="WritingScore" value="@i" id="@radioId" class="btn-check">
+                                        <label class="btn btn-outline-primary btn-sm" for="@radioId">@i</label>
                                     }
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">القيمة المحددة: <span id="writingDisplay">@Model.WritingScore</span></small>
                                 </div>
                             </div>
                             <span asp-validation-for="WritingScore" class="text-danger"></span>
                             <textarea asp-for="WritingComments" class="form-control" rows="2"
                                       placeholder="تعليقات على جودة الكتابة..."></textarea>
-                            <span asp-validation-for="WritingComments" class="text-danger"></span>
                         </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                         <!-- Overall Score Display -->
                         <div class="alert alert-primary">
@@ -346,36 +278,36 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="CommentsToAuthor" class="form-label">تعليقات للمؤلف *</label>
-                            <textarea asp-for="CommentsToAuthor" class="form-control" rows="5" 
-                                      placeholder="اكتب تعليقاتك وملاحظاتك للمؤلف هنا...">@Model.CommentsToAuthor</textarea>
+                            <textarea asp-for="CommentsToAuthor" class="form-control" rows="5"
+                                      placeholder="اكتب تعليقاتك وملاحظاتك للمؤلف هنا..."></textarea>
                             <span asp-validation-for="CommentsToAuthor" class="text-danger"></span>
                             <div class="form-text">هذه التعليقات ستكون مرئية للمؤلف</div>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="CommentsToTrackManager" class="form-label">تعليقات لمدير المسار</label>
-                            <textarea asp-for="CommentsToTrackManager" class="form-control" rows="3" 
-                                      placeholder="تعليقات سرية لمدير المسار...">@Model.CommentsToTrackManager</textarea>
+                            <textarea asp-for="CommentsToTrackManager" class="form-control" rows="3"
+                                      placeholder="تعليقات سرية لمدير المسار..."></textarea>
                             <span asp-validation-for="CommentsToTrackManager" class="text-danger"></span>
                             <div class="form-text">هذه التعليقات سرية ولن تكون مرئية للمؤلف</div>
                         </div>
+
                         <div class="mb-3">
                             <label asp-for="Decision" class="form-label">القرار النهائي *</label>
-                            <select asp-for="Decision" asp-items="Model.DecisionOptions" class="form-select"></select>
+                            <select asp-for="Decision" class="form-select">
+                                <option value="">اختر القرار</option>
+                                <option value="1">قبول البحث</option>
+                                <option value="2">رفض البحث</option>
+                                <option value="3">قبول مع تعديلات طفيفة</option>
+                                <option value="4">قبول مع تعديلات جوهرية</option>
+                            </select>
                             <span asp-validation-for="Decision" class="text-danger"></span>
                         </div>
 
-                      @*   <div class="mb-3">
-                            <label asp-for="Decision" class="form-label">القرار النهائي *</label>
-                            <select asp-for="Decision" asp-items="Model.DecisionOptions" class="form-select"></select>
-                      
-                            <span asp-validation-for="Decision" class="text-danger"></span>
-                        </div> *@
-
                         <div class="mb-3">
                             <label asp-for="Recommendations" class="form-label">التوصيات</label>
-                            <textarea asp-for="Recommendations" class="form-control" rows="3" 
-                                      placeholder="توصيات للتحسين أو التطوير...">@Model.Recommendations</textarea>
+                            <textarea asp-for="Recommendations" class="form-control" rows="3"
+                                      placeholder="توصيات للتحسين أو التطوير..."></textarea>
                             <span asp-validation-for="Recommendations" class="text-danger"></span>
                         </div>
                     </div>
@@ -416,127 +348,302 @@
     <script>
         $(document).ready(function() {
             console.log('📝 تم تحميل صفحة تعديل المراجعة');
-            
+
+            // Fix any radio button issues first
+            fixRadioButtonIssues();
+
             // Initialize the form
             initializeEditForm();
-            
+
             // Calculate initial overall score
             calculateOverallScore();
-            
+
             // Set up event handlers
             setupEventHandlers();
-                     if (@Model.OriginalityScore > 0) {
-                $('input[name="OriginalityScore"][value="@Model.OriginalityScore"]').prop('checked', true);
-            }
-            if (@Model.MethodologyScore > 0) {
-                $('input[name="MethodologyScore"][value="@Model.MethodologyScore"]').prop('checked', true);
-            }
-            if (@Model.ResultsScore > 0) {
-                $('input[name="ResultsScore"][value="@Model.ResultsScore"]').prop('checked', true);
-            }
-            if (@Model.WritingScore > 0) {
-                $('input[name="WritingScore"][value="@Model.WritingScore"]').prop('checked', true);
-            }
+
+            // Initialize selected values display
+            updateSelectedValueDisplays();
 
             // Set initial decision value
-            $('select[name="Decision"]').val('@((int)Model.Decision)');
+            setInitialDecisionValue();
+
+            // Debug after everything is set up
+            setTimeout(function() {
+                debugRadioButtons();
+                console.log('🎯 اختبار النهائي للقيم:');
+                logCurrentValues();
+            }, 500);
+
+            // Add periodic value checking (for debugging)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                setInterval(function() {
+                    const checkedRadios = $('input[type="radio"]:checked').length;
+                    if (checkedRadios > 0) {
+                        // Only log if there are changes
+                        const currentTime = new Date().toLocaleTimeString();
+                        console.log(`⏰ ${currentTime} - راديو باتون محددة: ${checkedRadios}`);
+                    }
+                }, 10000); // Every 10 seconds
+            }
         });
 
-        //         $(document).ready(function() {
-        //     // Set initial values for radio buttons
-        //     if (@Model.OriginalityScore > 0) {
-        //         $('input[name="OriginalityScore"][value="@Model.OriginalityScore"]').prop('checked', true);
-        //     }
-        //     if (@Model.MethodologyScore > 0) {
-        //         $('input[name="MethodologyScore"][value="@Model.MethodologyScore"]').prop('checked', true);
-        //     }
-        //     if (@Model.ResultsScore > 0) {
-        //         $('input[name="ResultsScore"][value="@Model.ResultsScore"]').prop('checked', true);
-        //     }
-        //     if (@Model.WritingScore > 0) {
-        //         $('input[name="WritingScore"][value="@Model.WritingScore"]').prop('checked', true);
-        //     }
-
-        //     // Set initial decision value
-        //     $('select[name="Decision"]').val('@((int)Model.Decision)');
-        // });
-
+        function setInitialDecisionValue() {
+            // Set the correct decision value
+            var decisionValue = '@((int)Model.Decision)';
+            if (decisionValue && decisionValue !== '0') {
+                $('select[name="Decision"]').val(decisionValue);
+                console.log('🎯 تم تحديد القرار الأولي:', decisionValue);
+            }
+        }
 
         function initializeEditForm() {
-            // Highlight selected ratings
+            console.log('🔧 تهيئة النموذج');
+
+            // Set initial radio button values
+            setInitialRadioValues();
+
+            // Ensure correct radio buttons are checked and styled
             $('input[type="radio"]:checked').each(function() {
                 highlightRating($(this));
             });
+
+            // Log current values for debugging
+            console.log('القيم الحالية:', {
+                originality: $('input[name="OriginalityScore"]:checked').val(),
+                methodology: $('input[name="MethodologyScore"]:checked').val(),
+                results: $('input[name="ResultsScore"]:checked').val(),
+                writing: $('input[name="WritingScore"]:checked').val()
+            });
+        }
+
+        function setInitialRadioValues() {
+            // Set radio button values from model
+            var originalityScore = @Model.OriginalityScore;
+            var methodologyScore = @Model.MethodologyScore;
+            var resultsScore = @Model.ResultsScore;
+            var writingScore = @Model.WritingScore;
+
+            console.log('📊 تحديد القيم الأولية:', {
+                originality: originalityScore,
+                methodology: methodologyScore,
+                results: resultsScore,
+                writing: writingScore
+            });
+
+            // Check the correct radio buttons
+            if (originalityScore > 0) {
+                $('input[name="OriginalityScore"][value="' + originalityScore + '"]').prop('checked', true);
+                highlightRatingByName('OriginalityScore', originalityScore);
+            }
+
+            if (methodologyScore > 0) {
+                $('input[name="MethodologyScore"][value="' + methodologyScore + '"]').prop('checked', true);
+                highlightRatingByName('MethodologyScore', methodologyScore);
+            }
+
+            if (resultsScore > 0) {
+                $('input[name="ResultsScore"][value="' + resultsScore + '"]').prop('checked', true);
+                highlightRatingByName('ResultsScore', resultsScore);
+            }
+
+            if (writingScore > 0) {
+                $('input[name="WritingScore"][value="' + writingScore + '"]').prop('checked', true);
+                highlightRatingByName('WritingScore', writingScore);
+            }
+        }
+
+        function highlightRatingByName(fieldName, value) {
+            const input = $('input[name="' + fieldName + '"][value="' + value + '"]');
+            if (input.length) {
+                const container = input.closest('.btn-group');
+
+                // Reset all buttons in this group
+                container.find('label').removeClass('btn-primary').addClass('btn-outline-primary');
+
+                // Highlight the selected button
+                input.next('label').removeClass('btn-outline-primary').addClass('btn-primary');
+
+                console.log('✨ تم تمييز', fieldName, 'بالقيمة', value);
+            }
         }
 
         function setupEventHandlers() {
             // Rating button interactions
             $('input[type="radio"]').change(function() {
+                const fieldName = $(this).attr('name');
+                const selectedValue = $(this).val();
+
+                console.log('🔄 تغيير التقييم:', fieldName, '=', selectedValue);
+
+                // Verify the value is actually selected
+                const checkedValue = $('input[name="' + fieldName + '"]:checked').val();
+                console.log('🔍 القيمة المحددة فعلياً:', checkedValue);
+
                 highlightRating($(this));
                 calculateOverallScore();
+                updateSelectedValueDisplays();
+
+                // Additional verification
+                setTimeout(() => {
+                    const finalValue = $('input[name="' + fieldName + '"]:checked').val();
+                    console.log('✅ القيمة النهائية بعد 100ms:', finalValue);
+                }, 100);
+            });
+
+            // Also handle click events for better interaction
+            $('.btn-group label').click(function(e) {
+                const input = $(this).prev('input[type="radio"]');
+                if (input.length) {
+                    const fieldName = input.attr('name');
+                    const selectedValue = input.val();
+
+                    console.log('👆 نقر على الزر:', fieldName, '=', selectedValue);
+
+                    // Force the radio button to be checked
+                    input.prop('checked', true);
+
+                    setTimeout(function() {
+                        const actualValue = input.val();
+                        const isChecked = input.is(':checked');
+
+                        console.log('🔍 تحقق من الحالة:', {
+                            field: fieldName,
+                            value: actualValue,
+                            checked: isChecked
+                        });
+
+                        if (isChecked) {
+                            highlightRating(input);
+                            calculateOverallScore();
+                            updateSelectedValueDisplays();
+                        }
+                    }, 50);
+                }
             });
 
             // Save as draft
             $('#saveDraft').click(function() {
+                console.log('💾 حفظ كمسودة...');
+                logCurrentValues();
+
                 const form = $('#editReviewForm');
                 $('<input>').attr({
                     type: 'hidden',
                     name: 'IsDraft',
                     value: 'true'
                 }).appendTo(form);
-                
+
                 form.submit();
             });
 
             // Form validation
             $('#editReviewForm').on('submit', function(e) {
+                console.log('📤 إرسال النموذج...');
+                logCurrentValues();
+
                 if (!validateEditForm()) {
                     e.preventDefault();
                     return false;
                 }
-                
+
                 // Confirmation
                 if (!confirm('هل أنت متأكد من تحديث هذه المراجعة؟\n\nسيتم حفظ جميع التغييرات وقد لا يمكن التراجع عنها.')) {
                     e.preventDefault();
                     return false;
                 }
-                
+
+                // Final verification before submit
+                console.log('🔍 القيم النهائية قبل الإرسال:');
+                logCurrentValues();
+
                 // Show loading state
                 $('#updateReview').html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التحديث...').prop('disabled', true);
-                
+
                 return true;
+            });
+        }
+
+        function logCurrentValues() {
+            const values = {
+                OriginalityScore: $('input[name="OriginalityScore"]:checked').val() || 'غير محدد',
+                MethodologyScore: $('input[name="MethodologyScore"]:checked').val() || 'غير محدد',
+                ResultsScore: $('input[name="ResultsScore"]:checked').val() || 'غير محدد',
+                WritingScore: $('input[name="WritingScore"]:checked').val() || 'غير محدد',
+                Decision: $('select[name="Decision"]').val() || 'غير محدد'
+            };
+
+            console.table(values);
+
+            // Also check if any radio buttons have conflicting values
+            $('input[type="radio"]').each(function() {
+                if ($(this).is(':checked')) {
+                    const name = $(this).attr('name');
+                    const value = $(this).val();
+                    const attr = $(this).attr('value');
+
+                    if (value !== attr) {
+                        console.warn('⚠️ تضارب في القيم:', name, 'val()=', value, 'attr=', attr);
+                    }
+                }
             });
         }
 
         function highlightRating(radioButton) {
             const container = radioButton.closest('.btn-group');
             const value = parseInt(radioButton.val());
-            
-            container.find('label').each(function(index) {
-                const btn = $(this);
-                if (index < value) {
-                    btn.removeClass('btn-outline-primary').addClass('btn-primary');
-                } else {
-                    btn.removeClass('btn-primary').addClass('btn-outline-primary');
-                }
-            });
+            const name = radioButton.attr('name');
+
+            console.log('🎯 تحديث التمييز للحقل:', name, 'القيمة:', value);
+
+            // Reset all buttons in this group
+            container.find('label').removeClass('btn-primary').addClass('btn-outline-primary');
+
+            // Highlight the selected button
+            container.find('input[value="' + value + '"]').next('label')
+                .removeClass('btn-outline-primary').addClass('btn-primary');
+        }
+
+        function updateSelectedValueDisplays() {
+            // Update the selected value displays
+            const originality = $('input[name="OriginalityScore"]:checked').val() || 0;
+            const methodology = $('input[name="MethodologyScore"]:checked').val() || 0;
+            const results = $('input[name="ResultsScore"]:checked').val() || 0;
+            const writing = $('input[name="WritingScore"]:checked').val() || 0;
+
+            $('#originalitySelectedValue').text(originality);
+            $('#methodologySelectedValue').text(methodology);
+            $('#resultsSelectedValue').text(results);
+            $('#writingSelectedValue').text(writing);
         }
 
         function calculateOverallScore() {
             let total = 0;
             let count = 0;
-            
+
+            // Get all checked score radio buttons
+            const scores = [];
             $('input[type="radio"]:checked').each(function() {
-                if ($(this).attr('name').includes('Score')) {
-                    total += parseInt($(this).val());
+                const name = $(this).attr('name');
+                if (name && name.includes('Score')) {
+                    const value = parseInt($(this).val());
+                    scores.push(value);
+                    total += value;
                     count++;
                 }
             });
-            
+
             const average = count > 0 ? (total / count).toFixed(1) : 0;
+
+            console.log('📊 حساب التقييم الإجمالي:', {
+                scores: scores,
+                total: total,
+                count: count,
+                average: average
+            });
+
             $('#newOverallScore').text(average);
             $('#newOverallProgress').css('width', (average * 10) + '%');
-            
+
             // Update progress bar color based on score
             const progressBar = $('#newOverallProgress');
             progressBar.removeClass('bg-danger bg-warning bg-success');
@@ -552,16 +659,20 @@
         function validateEditForm() {
             let isValid = true;
             let missingFields = [];
-            
+
             // Check if all scores are provided
             const scoreFields = ['OriginalityScore', 'MethodologyScore', 'ResultsScore', 'WritingScore'];
             scoreFields.forEach(function(field) {
-                if (!$(`input[name="${field}"]:checked`).length) {
+                const checked = $(`input[name="${field}"]:checked`);
+                if (!checked.length) {
                     isValid = false;
-                    missingFields.push('تقييم ' + field.replace('Score', ''));
+                    const displayName = field.replace('Score', '').replace('Originality', 'الأصالة')
+                        .replace('Methodology', 'المنهجية').replace('Results', 'النتائج')
+                        .replace('Writing', 'جودة الكتابة');
+                    missingFields.push('تقييم ' + displayName);
                 }
             });
-            
+
             // Check required text fields
             if (!$('[name="CommentsToAuthor"]').val().trim()) {
                 isValid = false;
@@ -570,7 +681,7 @@
             } else {
                 $('[name="CommentsToAuthor"]').removeClass('is-invalid');
             }
-            
+
             if (!$('[name="Decision"]').val()) {
                 isValid = false;
                 missingFields.push('القرار النهائي');
@@ -578,11 +689,11 @@
             } else {
                 $('[name="Decision"]').removeClass('is-invalid');
             }
-            
+
             if (!isValid) {
                 let message = 'يرجى إكمال الحقول المطلوبة:\n• ' + missingFields.join('\n• ');
                 alert(message);
-                
+
                 // Scroll to first invalid field
                 const firstInvalid = $('.is-invalid').first();
                 if (firstInvalid.length) {
@@ -591,49 +702,17 @@
                     }, 500);
                 }
             }
-            
+
             return isValid;
         }
 
-        // Auto-save functionality (every 3 minutes)
-        setInterval(function() {
-            if ($('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').filter(function() {
-                return $(this).val() !== $(this).data('original-value');
-            }).length > 0) {
-                console.log('🔄 Auto-saving review changes...');
-                // Add auto-save logic here if needed
-            }
-        }, 180000); // 3 minutes
-
-        // Character count for text areas
-        $('textarea').each(function() {
-            const maxLength = $(this).attr('maxlength');
-            if (maxLength) {
-                const counter = $('<div class="form-text text-end"></div>');
-                $(this).after(counter);
-                
-                const updateCounter = () => {
-                    const remaining = maxLength - $(this).val().length;
-                    counter.text(`${remaining} حرف متبقي`);
-                    counter.toggleClass('text-danger', remaining < 50);
-                };
-                
-                $(this).on('input', updateCounter);
-                updateCounter();
-            }
-        });
-
         // Store original values for change detection
-        $('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').each(function() {
-            $(this).data('original-value', $(this).val());
-        });
-
-        // Warn before leaving with unsaved changes
         let formChanged = false;
         $('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').on('change input', function() {
             formChanged = true;
         });
 
+        // Warn before leaving with unsaved changes
         $(window).on('beforeunload', function() {
             if (formChanged) {
                 return 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟';
@@ -643,6 +722,105 @@
         $('#editReviewForm').on('submit', function() {
             formChanged = false;
         });
+
+        // Debug function to check radio button states
+        function debugRadioButtons() {
+            console.log('🔍 فحص حالة الراديو باتون:');
+
+            const scoreFields = ['OriginalityScore', 'MethodologyScore', 'ResultsScore', 'WritingScore'];
+
+            scoreFields.forEach(function(field) {
+                console.log(`\n📊 ${field}:`);
+
+                // Check all radio buttons for this field
+                $(`input[name="${field}"]`).each(function(index) {
+                    const value = $(this).val();
+                    const isChecked = $(this).is(':checked');
+                    const attrValue = $(this).attr('value');
+
+                    if (isChecked) {
+                        console.log(`  ✅ محدد: القيمة=${value}, الخاصية=${attrValue}, المفتاح=${index + 1}`);
+                    }
+                });
+
+                // Check what's actually selected
+                const selectedValue = $(`input[name="${field}"]:checked`).val();
+                console.log(`  🎯 القيمة المحددة حالياً: ${selectedValue || 'لا شيء'}`);
+            });
+
+            // Check for duplicate IDs or values
+            const allRadios = $('input[type="radio"]');
+            const ids = [];
+            const duplicateIds = [];
+
+            allRadios.each(function() {
+                const id = $(this).attr('id');
+                if (ids.includes(id)) {
+                    duplicateIds.push(id);
+                } else {
+                    ids.push(id);
+                }
+            });
+
+            if (duplicateIds.length > 0) {
+                console.warn('⚠️ معرفات مكررة:', duplicateIds);
+            }
+        }
+
+        // Function to fix radio button issues
+        function fixRadioButtonIssues() {
+            console.log('🔧 إصلاح مشاكل الراديو باتون...');
+
+            // Ensure all radio buttons have unique IDs and correct values
+            const scoreFields = ['OriginalityScore', 'MethodologyScore', 'ResultsScore', 'WritingScore'];
+
+            scoreFields.forEach(function(fieldName) {
+                $(`input[name="${fieldName}"]`).each(function(index) {
+                    const expectedValue = index + 1;
+                    const currentValue = $(this).val();
+                    const currentId = $(this).attr('id');
+
+                    // Fix value if incorrect
+                    if (parseInt(currentValue) !== expectedValue) {
+                        console.log(`🔧 إصلاح قيمة ${fieldName}[${index}]: ${currentValue} -> ${expectedValue}`);
+                        $(this).attr('value', expectedValue);
+                        $(this).val(expectedValue);
+                    }
+
+                    // Ensure label points to correct input
+                    const label = $(this).next('label');
+                    if (label.attr('for') !== currentId) {
+                        label.attr('for', currentId);
+                    }
+                });
+            });
+
+            console.log('✅ تم إصلاح مشاكل الراديو باتون');
+        }
+
+        // Enhanced function to update selected values with better validation
+        function updateSelectedValueDisplays() {
+            const fields = [
+                { name: 'OriginalityScore', display: '#originalitySelectedValue' },
+                { name: 'MethodologyScore', display: '#methodologySelectedValue' },
+                { name: 'ResultsScore', display: '#resultsSelectedValue' },
+                { name: 'WritingScore', display: '#writingSelectedValue' }
+            ];
+
+            fields.forEach(function(field) {
+                const selectedInput = $(`input[name="${field.name}"]:checked`);
+                const value = selectedInput.length ? selectedInput.val() : 0;
+
+                $(field.display).text(value);
+
+                // Add visual feedback for debugging
+                if (selectedInput.length) {
+                    $(field.display).removeClass('text-danger').addClass('text-primary');
+                } else {
+                    $(field.display).removeClass('text-primary').addClass('text-danger');
+                }
+            });
+        }
     </script>
 }
 
@@ -650,11 +828,30 @@
     <style>
         .rating-container .btn-group {
             flex-wrap: wrap;
+            gap: 2px;
         }
 
         .rating-container .btn {
             min-width: 40px;
+            margin: 1px;
         }
+
+        .btn-check {
+            position: absolute;
+            clip: rect(0, 0, 0, 0);
+            pointer-events: none;
+        }
+
+            .btn-check:checked + .btn,
+            .btn.active {
+                background-color: #0d6efd !important;
+                border-color: #0d6efd !important;
+                color: white !important;
+            }
+
+            .btn-check:focus + .btn {
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            }
 
         .is-invalid {
             border-color: #dc3545;
@@ -688,34 +885,22 @@
             font-weight: bold;
         }
 
-        .btn-check:checked + .btn {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: white;
-        }
-
-        .btn.active {
-            background-color: #0d6efd !important;
-            border-color: #0d6efd !important;
-            color: white !important;
-        }
-
         /* Enhanced animations */
         .card {
             transition: box-shadow 0.15s ease-in-out;
         }
 
-        .card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
+            .card:hover {
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            }
 
         .btn {
             transition: all 0.15s ease-in-out;
         }
 
-        .btn:hover {
-            transform: translateY(-1px);
-        }
+            .btn:hover {
+                transform: translateY(-1px);
+            }
 
         .progress-bar {
             transition: width 0.6s ease;
@@ -727,9 +912,173 @@
         }
 
         @@keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0%
+
+        {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+
+        100% {
+            opacity: 1;
+        }
+
+        }
+
+        /* Better radio button styling */
+        .rating-container {
+            user-select: none;
+        }
+
+        .btn-group .btn {
+            border-radius: 0.25rem !important;
+            margin: 0 1px;
+        }
+
+            .btn-group .btn:first-child {
+                border-top-left-radius: 0.25rem !important;
+                border-bottom-left-radius: 0.25rem !important;
+            }
+
+            .btn-group .btn:last-child {
+                border-top-right-radius: 0.25rem !important;
+                border-bottom-right-radius: 0.25rem !important;
+            }
+
+        /* Highlight selected value display */
+        .text-muted small {
+            font-weight: 500;
+        }
+
+        #originalitySelectedValue,
+        #methodologySelectedValue,
+        #resultsSelectedValue,
+        #writingSelectedValue {
+            color: #0d6efd !important;
+            font-weight: bold;
+        }
+
+        /* Improved form styling */
+        .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        /* Better button interactions */
+        .btn-group label {
+            cursor: pointer;
+            position: relative;
+        }
+
+            .btn-group label:hover {
+                background-color: #e9ecef;
+                border-color: #adb5bd;
+            }
+
+            .btn-group label.btn-primary:hover {
+                background-color: #0b5ed7;
+                border-color: #0a58ca;
+            }
+
+        /* Card animations */
+        .card {
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            border-radius: 0.5rem;
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Alert styling improvements */
+        .alert {
+            border-radius: 0.5rem;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Better progress bar */
+        .progress {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            border-radius: 0.5rem;
+        }
+
+        /* Validation error styling */
+        .text-danger {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+        /* Form text styling */
+        .form-text {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+
+        /* Loading button animation */
+        .btn .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        /* Mobile responsiveness */
+        @@media (max-width: 768px) {
+            .btn-group
+
+        {
+            flex-wrap: wrap;
+        }
+
+        .btn-group .btn {
+            margin: 2px;
+            min-width: 35px;
+        }
+
+        .rating-container .btn-group {
+            justify-content: center;
+        }
+
+        }
+
+        /* Print styles */
+        @@media print {
+            .btn, .alert, .card-header
+
+        {
+            background: white !important;
+            color: black !important;
+            border: 1px solid black !important;
+        }
+
         }
     </style>
 }
