@@ -161,11 +161,7 @@ configuration
 .WriteTo.Console()
 .WriteTo.File("logs/app-.txt", rollingInterval: RollingInterval.Day));
 
-// ≈⁄œ«œ DbContext
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(
@@ -361,11 +357,11 @@ async Task SeedDatabase(WebApplication app)
             var userManager = services.GetRequiredService<UserManager<User>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // ≈‰‘«¡ ﬁ«⁄œ… «·»Ì«‰«  ≈–« ·„  ﬂ‰ „ÊÃÊœ…
-            //await context.Database.EnsureCreatedAsync();
-                await context.Database.MigrateAsync();
+                // ≈‰‘«¡ ﬁ«⁄œ… «·»Ì«‰«  ≈–« ·„  ﬂ‰ „ÊÃÊœ…
+                await context.Database.EnsureCreatedAsync();
+                //await context.Database.MigrateAsync();
                 //  ÿ»Ìﬁ Database Seeding
-                await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
+                //await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
             await EnhancedDatabaseSeeder.SeedAsync(context, userManager, roleManager);
             logger.LogInformation(" „  ‘€Ì· «· ÿ»Ìﬁ »‰Ã«Õ");
         }

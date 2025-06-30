@@ -1,0 +1,612 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.Review.CreateReviewViewModel
+@{
+    ViewData["Title"] = "تعديل المراجعة";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-edit me-2 text-primary"></i>تعديل المراجعة</h2>
+            <p class="text-muted">تعديل وتحديث تقييم ومراجعة البحث العلمي</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+            </a>
+            <a asp-action="Details" asp-route-id="@Model.Research.Id" class="btn btn-outline-info">
+                <i class="fas fa-eye me-2"></i>عرض التفاصيل
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Research Information (Readonly) -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>معلومات البحث</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">@Model.Research.Title</h6>
+                    @if (!string.IsNullOrEmpty(Model.Research.TitleEn))
+                    {
+                        <p class="text-muted small">@Model.Research.TitleEn</p>
+                    }
+
+                    <div class="mb-3">
+                        <strong>المؤلفون:</strong>
+                        <ul class="list-unstyled mt-1">
+                            @foreach (var author in Model.Research.Authors)
+                            {
+                                <li class="small">
+                                    <i class="fas fa-user me-1"></i>
+                                    @author.FullName
+                                    @if (author.IsCorresponding)
+                                    {
+                                        <span class="badge bg-primary ms-1">مراسل</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>المسار:</strong>
+                        <span class="badge bg-info ms-1">@Model.Research.TrackDisplayName</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>نوع البحث:</strong>
+                        <span class="text-muted">@Model.Research.ResearchTypeDisplayName</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>تاريخ التقديم:</strong>
+                        <span class="text-muted">@Model.Research.SubmissionDate.ToString("yyyy/MM/dd")</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>الموعد النهائي للمراجعة:</strong>
+                        @if (Model.DueDate.HasValue)
+                        {
+                            <span class="@(Model.IsOverdue() ? "text-danger fw-bold" : "text-success")">
+                                @Model.DueDate.Value.ToString("yyyy/MM/dd")
+                            </span>
+                            @if (Model.IsOverdue())
+                            {
+                                <br><small class="text-danger">⚠️ متأخر @Model.GetDaysToComplete() يوم</small>
+                            }
+                            else
+                            {
+                                <br><small class="text-muted">@Model.GetDaysToComplete() يوم متبقي</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">غير محدد</span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>الملخص:</strong>
+                        <div class="border rounded p-2 bg-light small" style="max-height: 150px; overflow-y: auto;">
+                            @Model.Research.AbstractAr
+                        </div>
+                    </div>
+
+                    @if (Model.Research.Files?.Any() == true)
+                    {
+                        <div class="mb-3">
+                            <strong>الملفات:</strong>
+                            <div class="list-group list-group-flush">
+                                @foreach (var file in Model.Research.Files)
+                                {
+                                    <div class="list-group-item px-0 py-2">
+                                        <a asp-controller="Research" asp-action="DownloadFile" asp-route-fileId="@file.Id" 
+                                           class="text-decoration-none" target="_blank">
+                                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                                            @file.OriginalFileName
+                                        </a>
+                                        <small class="text-muted d-block">@file.Description</small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Review Form -->
+        <div class="col-lg-8">
+            <form asp-action="Edit" method="post" id="editReviewForm">
+                <input type="hidden" asp-for="ResearchId" />
+                <input type="hidden" asp-for="ReviewerId" />
+
+                <!-- Current Status Alert -->
+                <div class="alert alert-info mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="alert-heading mb-2">
+                                <i class="fas fa-info-circle me-2"></i>حالة المراجعة الحالية
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>التقييم الحالي:</strong> 
+                                    <span class="fs-5 text-primary">@Model.OverallScore.ToString("0.0")</span>/10
+                                </div>
+                                <div class="col-6">
+                                    <strong>القرار الحالي:</strong>
+                                    <span class="badge bg-secondary">@Model.DecisionDisplayName</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar @(Model.OverallScore >= 7 ? "bg-success" : Model.OverallScore >= 5 ? "bg-warning" : "bg-danger")" 
+                                     style="width: @(Model.OverallScore * 10)%">
+                                    @Model.OverallScoreDisplayName
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Criteria -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>معايير التقييم</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Originality -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">الأصالة والجدة (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="originality">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                     @*    <input type="radio" class="btn-check" asp-for="OriginalityScore" value="@i" id="originality@i" @(Model.OriginalityScore == i ? "checked" : "")> *@
+                                        <label class="btn btn-outline-primary btn-sm @(Model.OriginalityScore == i ? "active" : "")" for="originality@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <textarea asp-for="OriginalityComments" class="form-control" rows="2" 
+                                      placeholder="تعليقات على الأصالة والجدة...">@Model.OriginalityComments</textarea>
+                            <span asp-validation-for="OriginalityComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Methodology -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">المنهجية والطريقة (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="methodology">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        @* <input type="radio" class="btn-check" asp-for="MethodologyScore" value="@i" id="methodology@i" @(Model.MethodologyScore == i ? "checked" : "")> *@
+                                        <label class="btn btn-outline-primary btn-sm @(Model.MethodologyScore == i ? "active" : "")" for="methodology@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <textarea asp-for="MethodologyComments" class="form-control" rows="2" 
+                                      placeholder="تعليقات على المنهجية...">@Model.MethodologyComments</textarea>
+                            <span asp-validation-for="MethodologyComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Results -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">النتائج والتحليل (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="results">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                      @*   <input type="radio" class="btn-check" asp-for="ResultsScore" value="@i" id="results@i" @(Model.ResultsScore == i ? "checked" : "")> *@
+                                        <label class="btn btn-outline-primary btn-sm @(Model.ResultsScore == i ? "active" : "")" for="results@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <textarea asp-for="ResultsComments" class="form-control" rows="2" 
+                                      placeholder="تعليقات على النتائج والتحليل...">@Model.ResultsComments</textarea>
+                            <span asp-validation-for="ResultsComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Writing Quality -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">جودة الكتابة والعرض (25%)</label>
+                            <div class="rating-container mb-2">
+                                <div class="btn-group" role="group" data-rating="writing">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        @* <input type="radio" class="btn-check" asp-for="WritingScore" value="@i" id="writing@i" @(Model.WritingScore == i ? "checked" : "")> *@
+                                        <label class="btn btn-outline-primary btn-sm @(Model.WritingScore == i ? "active" : "")" for="writing@i">@i</label>
+                                    }
+                                </div>
+                            </div>
+                            <textarea asp-for="WritingComments" class="form-control" rows="2" 
+                                      placeholder="تعليقات على جودة الكتابة...">@Model.WritingComments</textarea>
+                            <span asp-validation-for="WritingComments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Overall Score Display -->
+                        <div class="alert alert-primary">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <strong>التقييم الجديد:</strong>
+                                    <span id="newOverallScore" class="fs-4 text-primary">@Model.OverallScore.ToString("0.0")</span>/10
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>التقييم السابق:</strong>
+                                    <span class="fs-6 text-muted">@Model.OverallScore.ToString("0.0")/10</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="progress">
+                                        <div id="newOverallProgress" class="progress-bar" style="width: @(Model.OverallScore * 10)%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments and Decision -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-comments me-2"></i>التعليقات والقرار</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="CommentsToAuthor" class="form-label">تعليقات للمؤلف *</label>
+                            <textarea asp-for="CommentsToAuthor" class="form-control" rows="5" 
+                                      placeholder="اكتب تعليقاتك وملاحظاتك للمؤلف هنا...">@Model.CommentsToAuthor</textarea>
+                            <span asp-validation-for="CommentsToAuthor" class="text-danger"></span>
+                            <div class="form-text">هذه التعليقات ستكون مرئية للمؤلف</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CommentsToTrackManager" class="form-label">تعليقات لمدير المسار</label>
+                            <textarea asp-for="CommentsToTrackManager" class="form-control" rows="3" 
+                                      placeholder="تعليقات سرية لمدير المسار...">@Model.CommentsToTrackManager</textarea>
+                            <span asp-validation-for="CommentsToTrackManager" class="text-danger"></span>
+                            <div class="form-text">هذه التعليقات سرية ولن تكون مرئية للمؤلف</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Decision" class="form-label">القرار النهائي *</label>
+                            <select asp-for="Decision" class="form-select">
+                                <option value="">اختر القرار</option>
+                  @*               <option value="1" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.AcceptA? "selected" : "")>قبول البحث</option>
+                                <option value="2" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.Reject ? "selected" : "")>رفض البحث</option>
+                                <option value="3" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.AcceptWithMinorRevisions ? "selected" : "")>قبول مع تعديلات طفيفة</option>
+                                <option value="4" @(Model.Decision == ResearchManagement.Domain.Enums.ReviewDecision.MajorRevisionsRequired ? "selected" : "")>قبول مع تعديلات جوهرية</option> *@
+                            </select>
+                            <span asp-validation-for="Decision" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Recommendations" class="form-label">التوصيات</label>
+                            <textarea asp-for="Recommendations" class="form-control" rows="3" 
+                                      placeholder="توصيات للتحسين أو التطوير...">@Model.Recommendations</textarea>
+                            <span asp-validation-for="Recommendations" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confidentiality Notice -->
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تنبيه:</strong> جميع المعلومات المتعلقة بهذا البحث سرية ولا يجب مشاركتها مع أطراف خارجية.
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-outline-secondary me-2" id="saveDraft">
+                                    <i class="fas fa-save me-2"></i>حفظ كمسودة
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-danger">
+                                    <i class="fas fa-times me-2"></i>إلغاء التغييرات
+                                </a>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button type="submit" class="btn btn-success btn-lg" id="updateReview">
+                                    <i class="fas fa-check me-2"></i>تحديث المراجعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            console.log('📝 تم تحميل صفحة تعديل المراجعة');
+            
+            // Initialize the form
+            initializeEditForm();
+            
+            // Calculate initial overall score
+            calculateOverallScore();
+            
+            // Set up event handlers
+            setupEventHandlers();
+        });
+
+        function initializeEditForm() {
+            // Highlight selected ratings
+            $('input[type="radio"]:checked').each(function() {
+                highlightRating($(this));
+            });
+        }
+
+        function setupEventHandlers() {
+            // Rating button interactions
+            $('input[type="radio"]').change(function() {
+                highlightRating($(this));
+                calculateOverallScore();
+            });
+
+            // Save as draft
+            $('#saveDraft').click(function() {
+                const form = $('#editReviewForm');
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'IsDraft',
+                    value: 'true'
+                }).appendTo(form);
+                
+                form.submit();
+            });
+
+            // Form validation
+            $('#editReviewForm').on('submit', function(e) {
+                if (!validateEditForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Confirmation
+                if (!confirm('هل أنت متأكد من تحديث هذه المراجعة؟\n\nسيتم حفظ جميع التغييرات وقد لا يمكن التراجع عنها.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Show loading state
+                $('#updateReview').html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التحديث...').prop('disabled', true);
+                
+                return true;
+            });
+        }
+
+        function highlightRating(radioButton) {
+            const container = radioButton.closest('.btn-group');
+            const value = parseInt(radioButton.val());
+            
+            container.find('label').each(function(index) {
+                const btn = $(this);
+                if (index < value) {
+                    btn.removeClass('btn-outline-primary').addClass('btn-primary');
+                } else {
+                    btn.removeClass('btn-primary').addClass('btn-outline-primary');
+                }
+            });
+        }
+
+        function calculateOverallScore() {
+            let total = 0;
+            let count = 0;
+            
+            $('input[type="radio"]:checked').each(function() {
+                if ($(this).attr('name').includes('Score')) {
+                    total += parseInt($(this).val());
+                    count++;
+                }
+            });
+            
+            const average = count > 0 ? (total / count).toFixed(1) : 0;
+            $('#newOverallScore').text(average);
+            $('#newOverallProgress').css('width', (average * 10) + '%');
+            
+            // Update progress bar color based on score
+            const progressBar = $('#newOverallProgress');
+            progressBar.removeClass('bg-danger bg-warning bg-success');
+            if (average < 4) {
+                progressBar.addClass('bg-danger');
+            } else if (average < 7) {
+                progressBar.addClass('bg-warning');
+            } else {
+                progressBar.addClass('bg-success');
+            }
+        }
+
+        function validateEditForm() {
+            let isValid = true;
+            let missingFields = [];
+            
+            // Check if all scores are provided
+            const scoreFields = ['OriginalityScore', 'MethodologyScore', 'ResultsScore', 'WritingScore'];
+            scoreFields.forEach(function(field) {
+                if (!$(`input[name="${field}"]:checked`).length) {
+                    isValid = false;
+                    missingFields.push('تقييم ' + field.replace('Score', ''));
+                }
+            });
+            
+            // Check required text fields
+            if (!$('[name="CommentsToAuthor"]').val().trim()) {
+                isValid = false;
+                missingFields.push('تعليقات للمؤلف');
+                $('[name="CommentsToAuthor"]').addClass('is-invalid');
+            } else {
+                $('[name="CommentsToAuthor"]').removeClass('is-invalid');
+            }
+            
+            if (!$('[name="Decision"]').val()) {
+                isValid = false;
+                missingFields.push('القرار النهائي');
+                $('[name="Decision"]').addClass('is-invalid');
+            } else {
+                $('[name="Decision"]').removeClass('is-invalid');
+            }
+            
+            if (!isValid) {
+                let message = 'يرجى إكمال الحقول المطلوبة:\n• ' + missingFields.join('\n• ');
+                alert(message);
+                
+                // Scroll to first invalid field
+                const firstInvalid = $('.is-invalid').first();
+                if (firstInvalid.length) {
+                    $('html, body').animate({
+                        scrollTop: firstInvalid.offset().top - 100
+                    }, 500);
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Auto-save functionality (every 3 minutes)
+        setInterval(function() {
+            if ($('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').filter(function() {
+                return $(this).val() !== $(this).data('original-value');
+            }).length > 0) {
+                console.log('🔄 Auto-saving review changes...');
+                // Add auto-save logic here if needed
+            }
+        }, 180000); // 3 minutes
+
+        // Character count for text areas
+        $('textarea').each(function() {
+            const maxLength = $(this).attr('maxlength');
+            if (maxLength) {
+                const counter = $('<div class="form-text text-end"></div>');
+                $(this).after(counter);
+                
+                const updateCounter = () => {
+                    const remaining = maxLength - $(this).val().length;
+                    counter.text(`${remaining} حرف متبقي`);
+                    counter.toggleClass('text-danger', remaining < 50);
+                };
+                
+                $(this).on('input', updateCounter);
+                updateCounter();
+            }
+        });
+
+        // Store original values for change detection
+        $('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').each(function() {
+            $(this).data('original-value', $(this).val());
+        });
+
+        // Warn before leaving with unsaved changes
+        let formChanged = false;
+        $('#editReviewForm input, #editReviewForm textarea, #editReviewForm select').on('change input', function() {
+            formChanged = true;
+        });
+
+        $(window).on('beforeunload', function() {
+            if (formChanged) {
+                return 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟';
+            }
+        });
+
+        $('#editReviewForm').on('submit', function() {
+            formChanged = false;
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .rating-container .btn-group {
+            flex-wrap: wrap;
+        }
+
+        .rating-container .btn {
+            min-width: 40px;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .card-header h5 {
+            color: #495057;
+        }
+
+        .progress {
+            height: 15px;
+        }
+
+        .alert-primary {
+            background-color: #cfe2ff;
+            border-color: #b6d4fe;
+            color: #084298;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .form-text.text-danger {
+            font-weight: bold;
+        }
+
+        .btn-check:checked + .btn {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+        .btn.active {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+        }
+
+        /* Enhanced animations */
+        .card {
+            transition: box-shadow 0.15s ease-in-out;
+        }
+
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .btn {
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+
+        /* Overdue warning styles */
+        .text-danger.fw-bold {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+}

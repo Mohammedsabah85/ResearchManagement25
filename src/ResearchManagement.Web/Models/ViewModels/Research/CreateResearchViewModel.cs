@@ -120,12 +120,13 @@ namespace ResearchManagement.Web.Models.ViewModels.Research
 
         private static string GetTrackDisplayName(ResearchTrack track) => track switch
         {
-            ResearchTrack.InformationTechnology => "تقنية المعلومات",
-            ResearchTrack.InformationSecurity => "أمن المعلومات",
-            ResearchTrack.SoftwareEngineering => "هندسة البرمجيات",
-            ResearchTrack.ArtificialIntelligence => "الذكاء الاصطناعي",
-            ResearchTrack.DataScience => "علوم البيانات",
-            ResearchTrack.NetworkingAndCommunications => "الشبكات والاتصالات",
+            ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+            ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+            ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
             _ => track.ToString()
         };
     }

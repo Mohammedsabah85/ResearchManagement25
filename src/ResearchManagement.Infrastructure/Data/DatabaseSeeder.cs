@@ -149,8 +149,8 @@ namespace ResearchManagement.Infrastructure.Data
                 var trackManagerEntity = new TrackManager
                 {
                     UserId = trackManager.Id,
-                    Track = ResearchTrack.InformationTechnology,
-                    TrackDescription = "تقنية المعلومات والحوسبة",
+                    Track = ResearchTrack.EnergyAndRenewableEnergy,
+                    TrackDescription = "Energy and Renewable Energy",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -162,7 +162,7 @@ namespace ResearchManagement.Infrastructure.Data
                 {
                     TrackManagerId = trackManagerEntity.Id,
                     ReviewerId = reviewer.Id,
-                    Track = ResearchTrack.InformationTechnology,
+                    Track = ResearchTrack.EnergyAndRenewableEnergy,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };

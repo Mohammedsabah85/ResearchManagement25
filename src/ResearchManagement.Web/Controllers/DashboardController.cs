@@ -314,21 +314,13 @@ namespace ResearchManagement.Web.Controllers
         {
             return track switch
             {
-                ResearchTrack.InformationTechnology => "تقنية المعلومات",
-                ResearchTrack.InformationSecurity => "أمن المعلومات",
-                ResearchTrack.ArtificialIntelligence => "الذكاء الاصطناعي",
-                ResearchTrack.DataScience => "علوم البيانات",
-                ResearchTrack.SoftwareEngineering => "هندسة البرمجيات",
-                ResearchTrack.NetworkingAndCommunications => "الشبكات والاتصالات",
-                ResearchTrack.CloudComputing => "الحوسبة السحابية",
-                ResearchTrack.InternetOfThings => "إنترنت الأشياء",
-                ResearchTrack.ARAndVR => "الواقع المعزز والافتراضي",
-                ResearchTrack.Blockchain => "البلوك تشين",
-                ResearchTrack.MachineLearning => "التعلم الآلي",
-                ResearchTrack.NaturalLanguageProcessing => "معالجة اللغات الطبيعية",
-                ResearchTrack.HighPerformanceComputing => "الحوسبة عالية الأداء",
-                ResearchTrack.MobileAppDevelopment => "تطوير التطبيقات المحمولة",
-                ResearchTrack.DatabaseSystems => "قواعد البيانات",
+                ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+                ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+                ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+                ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+                ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+                ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+                ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
                 _ => track.ToString()
             };
         }

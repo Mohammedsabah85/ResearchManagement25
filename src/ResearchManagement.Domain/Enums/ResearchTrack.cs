@@ -9,49 +9,27 @@ namespace ResearchManagement.Domain.Enums
 {
     public enum ResearchTrack
     {
-        [Display(Name = "تقنية المعلومات")]
-        InformationTechnology = 1,
+        [Display(Name = "Energy and Renewable Energy")]
+        EnergyAndRenewableEnergy = 1,
 
-        [Display(Name = "أمن المعلومات")]
-        InformationSecurity = 2,
+        [Display(Name = "Electromechanical System, and Mechatronics Engineering")]
+        ElectromechanicalSystemAndMechanicsEngineering = 2,
 
-        [Display(Name = "الذكاء الاصطناعي")]
-        ArtificialIntelligence = 3,
+        [Display(Name = "Material Science & Mechanical Engineering")]
+        MaterialScienceAndMechanicalEngineering = 3,
 
-        [Display(Name = "علوم البيانات")]
-        DataScience = 4,
+        [Display(Name = "Navigation & Guidance Systems, Computer and Communication Engineering")]
+        NavigationGuidanceSystemsComputerAndCommunicationEngineering = 4,
 
-        [Display(Name = "هندسة البرمجيات")]
-        SoftwareEngineering = 5,
+        [Display(Name = "Electrical & Electronics Engineering")]
+        ElectricalAndElectronicsEngineering = 5,
 
-        [Display(Name = "الشبكات والاتصالات")]
-        NetworkingAndCommunications = 6,
+        [Display(Name = "Avionics Systems, Aircraft and Unmanned Aircraft Engineering")]
+        AvionicsSystemsAircraftAndUnmannedAircraftEngineering = 6,
 
-        [Display(Name = "الحوسبة السحابية")]
-        CloudComputing = 7,
+        [Display(Name = "Earth's Natural Resources, Gas and Petroleum Systems & Equipment")]
+        EarthNaturalResourcesGasAndPetroleumSystemsEquipment = 7,
 
-        [Display(Name = "إنترنت الأشياء")]
-        InternetOfThings = 8,
-
-        [Display(Name = "الواقع المعزز والافتراضي")]
-        ARAndVR = 9,
-
-        [Display(Name = "البلوك تشين")]
-        Blockchain = 10,
-
-        [Display(Name = "التعلم الآلي")]
-        MachineLearning = 11,
-
-        [Display(Name = "معالجة اللغات الطبيعية")]
-        NaturalLanguageProcessing = 12,
-
-        [Display(Name = "الحوسبة عالية الأداء")]
-        HighPerformanceComputing = 13,
-
-        [Display(Name = "تطوير التطبيقات المحمولة")]
-        MobileAppDevelopment = 14,
-
-        [Display(Name = "قواعد البيانات")]
-        DatabaseSystems = 15
+      
     }
 }

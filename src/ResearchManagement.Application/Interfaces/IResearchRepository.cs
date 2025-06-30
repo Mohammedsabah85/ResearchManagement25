@@ -60,5 +60,6 @@ namespace ResearchManagement.Application.Interfaces
             int pageSize,
             string sortBy,
             bool sortDescending);
+       
     }
 }

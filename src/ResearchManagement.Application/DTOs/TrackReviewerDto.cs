@@ -18,15 +18,13 @@ namespace ResearchManagement.Application.DTOs
         // Additional properties for UI
         public string TrackDisplayName => Track switch
         {
-            //ResearchTrack.ComputerScience => "علوم الحاسب",
-            //ResearchTrack.InformationSystems => "نظم المعلومات",
-            ResearchTrack.SoftwareEngineering => "هندسة البرمجيات",
-            ResearchTrack.ArtificialIntelligence => "الذكاء الاصطناعي",
-            //ResearchTrack.Cybersecurity => "الأمن السيبراني",
-            ResearchTrack.DataScience => "علوم البيانات",
-            //ResearchTrack.NetworksAndCommunications => "الشبكات والاتصالات",
-            //ResearchTrack.HumanComputerInteraction => "تفاعل الإنسان والحاسوب",
-            //ResearchTrack.Other => "أخرى",
+            ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+            ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+            ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
             _ => "غير محدد"
         };
         

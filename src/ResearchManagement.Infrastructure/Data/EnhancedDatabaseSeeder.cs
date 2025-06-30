@@ -29,8 +29,7 @@ namespace ResearchManagement.Infrastructure.Data
         {
             var roles = new[]
             {
-                "Researcher", "Reviewer", "TrackManager",
-                "ConferenceManager", "SystemAdmin"
+                "Researcher", "Reviewer", "TrackManager", "SystemAdmin"
             };
 
             foreach (var role in roles)
@@ -168,8 +167,8 @@ namespace ResearchManagement.Infrastructure.Data
             var trackManagerEntity = new TrackManager
             {
                 UserId = trackManager.Id,
-                Track = ResearchTrack.InformationTechnology,
-                TrackDescription = "تقنية المعلومات والحوسبة",
+                Track = ResearchTrack.EnergyAndRenewableEnergy,
+                TrackDescription = "الطاقة والطاقة المتجددة",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -193,7 +192,7 @@ namespace ResearchManagement.Infrastructure.Data
                     {
                         TrackManagerId = trackManagerEntity.Id,
                         ReviewerId = reviewer.Id,
-                        Track = ResearchTrack.InformationTechnology,
+                        Track = ResearchTrack.EnergyAndRenewableEnergy,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -226,7 +225,7 @@ namespace ResearchManagement.Infrastructure.Data
                 KeywordsEn = "artificial intelligence, databases, machine learning, performance optimization",
                 ResearchType = ResearchType.ExperimentalStudy,
                 Language = ResearchLanguage.Bilingual,
-                Track = ResearchTrack.ArtificialIntelligence,
+                Track = ResearchTrack.EnergyAndRenewableEnergy,
                 Status = ResearchStatus.Submitted,
                 SubmittedById = researcher1.Id,
                 SubmissionDate = DateTime.UtcNow.AddDays(-10),
@@ -268,7 +267,7 @@ namespace ResearchManagement.Infrastructure.Data
                 KeywordsEn = "network security, cloud computing, hybrid environments, data protection",
                 ResearchType = ResearchType.AppliedResearch,
                 Language = ResearchLanguage.Bilingual,
-                Track = ResearchTrack.InformationSecurity,
+                Track = ResearchTrack.EnergyAndRenewableEnergy,
                 Status = ResearchStatus.UnderReview,
                 SubmittedById = researcher2.Id,
                 SubmissionDate = DateTime.UtcNow.AddDays(-5),
