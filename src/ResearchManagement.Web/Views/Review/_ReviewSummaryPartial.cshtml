@@ -1,0 +1,234 @@
+﻿@* Views/Review/_ReviewSummaryPartial.cshtml *@
+@model dynamic
+
+<div class="review-summary">
+    <div class="row">
+        <!-- Research Information -->
+        <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+                <i class="fas fa-file-alt me-2"></i>معلومات البحث
+            </h6>
+            <div class="mb-2">
+                <strong>العنوان:</strong>
+                <div class="text-muted">@Model.ResearchTitle</div>
+            </div>
+            <div class="mb-2">
+                <strong>المؤلف:</strong>
+                <span class="text-info">@Model.ResearchAuthor</span>
+            </div>
+            <div class="mb-2">
+                <strong>المسار:</strong>
+                <span class="badge bg-info">@Model.Track</span>
+            </div>
+        </div>
+
+        <!-- Review Information -->
+        <div class="col-md-6">
+            <h6 class="text-success mb-3">
+                <i class="fas fa-clipboard-check me-2"></i>معلومات المراجعة
+            </h6>
+            <div class="mb-2">
+                <strong>المراجع:</strong>
+                <span class="text-muted">@Model.ReviewerName</span>
+            </div>
+            <div class="mb-2">
+                <strong>تاريخ التكليف:</strong>
+                <span class="text-muted">@Model.AssignedDate</span>
+            </div>
+            <div class="mb-2">
+                <strong>تاريخ الإكمال:</strong>
+                <span class="@(Model.IsCompleted ? "text-success" : "text-warning")">@Model.CompletedDate</span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.IsCompleted)
+    {
+            <hr>
+
+            <!-- Scores Section -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-star me-2"></i>نتائج التقييم
+                    </h6>
+                </div>
+
+                <!-- Overall Score -->
+                <div class="col-md-4 mb-3">
+                    <div class="text-center">
+                        <div class="h3 text-primary mb-1">@Model.OverallScore.ToString("F1")/10</div>
+                        <div class="text-muted">التقييم الإجمالي</div>
+                        <div class="progress mt-2" style="height: 10px;">
+                            <div class="progress-bar @(Model.OverallScore >= 7 ? "bg-success" : Model.OverallScore >= 5 ? "bg-warning" : "bg-danger")" 
+                                 style="width: @(Model.OverallScore * 10)%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Scores -->
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small><strong>الأصالة:</strong></small>
+                                <span class="badge bg-primary">@Model.Scores.Originality/10</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: @(Model.Scores.Originality * 10)%"></div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small><strong>المنهجية:</strong></small>
+                                <span class="badge bg-primary">@Model.Scores.Methodology/10</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: @(Model.Scores.Methodology * 10)%"></div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small><strong>الوضوح:</strong></small>
+                                <span class="badge bg-primary">@Model.Scores.Clarity/10</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: @(Model.Scores.Clarity * 10)%"></div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small><strong>الأهمية:</strong></small>
+                                <span class="badge bg-primary">@Model.Scores.Significance/10</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: @(Model.Scores.Significance * 10)%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h6 class="text-info mb-2">
+                        <i class="fas fa-gavel me-2"></i>القرار النهائي
+                    </h6>
+                    <div class="text-center">
+                    @{
+                        string decisionBadgeClass = Model.Decision switch
+                        {
+                            "AcceptAsIs" => "badge-success",
+                            "Reject" => "badge-danger",
+                            "AcceptWithMinorRevisions" => "badge-info",
+                            "MajorRevisionsRequired" => "badge-warning",
+                            _ => "badge-secondary"
+                        };
+                    }
+                        <span class="badge @decisionBadgeClass fs-6 px-3 py-2">@Model.DecisionDisplayName</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Preview -->
+        @if (!string.IsNullOrEmpty(Model.CommentsToAuthor))
+        {
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-secondary mb-2">
+                                <i class="fas fa-comment me-2"></i>تعليقات للمؤلف
+                            </h6>
+                            <div class="bg-light p-3 rounded border-start border-4 border-primary">
+                                <p class="mb-0 text-muted small">
+                            @(Model.CommentsToAuthor.Length > 200 ?
+                                  Model.CommentsToAuthor.Substring(0, 200) + "..." :
+                                  Model.CommentsToAuthor)
+                                </p>
+                        @if (Model.CommentsToAuthor.Length > 200)
+                        {
+                                        <a href="#" class="small text-primary" onclick="showFullComments()">عرض كامل...</a>
+                        }
+                            </div>
+                        </div>
+                    </div>
+        }
+    }
+    else
+    {
+            <hr>
+            <div class="text-center py-3">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h6 class="text-warning">المراجعة غير مكتملة</h6>
+                <p class="text-muted mb-0">لم يتم إكمال هذه المراجعة بعد</p>
+            </div>
+    }
+</div>
+
+<!-- Action Buttons -->
+<div class="modal-footer border-top">
+    <a href="/Review/Details/@Model.ReviewId" class="btn btn-primary">
+        <i class="fas fa-eye me-2"></i>عرض التفاصيل الكاملة
+    </a>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+</div>
+
+<script>
+    function showFullComments() {
+        // يمكن تطوير هذه الوظيفة لعرض التعليقات كاملة
+        alert('سيتم عرض التعليقات كاملة في التفاصيل الكاملة للمراجعة');
+    }
+</script>
+
+<style>
+    .review-summary .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .review-summary .progress-bar {
+        transition: width 0.6s ease;
+    }
+
+    .review-summary .badge {
+        font-size: 0.875em;
+    }
+
+    .review-summary .border-start {
+        border-left-width: 4px !important;
+    }
+
+    .review-summary h6 {
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .review-summary .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .badge-success {
+        background-color: #28a745 !important;
+        color: white !important;
+    }
+
+    .badge-danger {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+
+    .badge-info {
+        background-color: #17a2b8 !important;
+        color: white !important;
+    }
+
+    .badge-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d !important;
+        color: white !important;
+    }
+</style>

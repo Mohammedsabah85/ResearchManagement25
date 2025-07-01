@@ -31,13 +31,13 @@ namespace ResearchManagement.Web.Controllers
             IReviewRepository reviewRepository,
             IResearchRepository researchRepository,
             ILogger<ResearchController> logger,
-            ApplicationDbContext context) : base(userManager) 
+            ApplicationDbContext context) : base(userManager)
         {
             _mediator = mediator;
             _reviewRepository = reviewRepository;
             _researchRepository = researchRepository;
             _logger = logger;
-             _context = context; 
+            _context = context;
         }
 
         // In your ReviewController.cs, replace the Index action with this:
@@ -883,5 +883,374 @@ namespace ResearchManagement.Web.Controllers
                 _ => "ضعيف جداً"
             };
         }
+    
+
+
+
+    // إضافة هذه الأكشنز إلى ReviewController.cs
+
+[HttpGet]
+        [Authorize(Roles = "Reviewer")]
+        public async Task<IActionResult> Pending(ReviewFilterViewModel filter = null)
+        {
+            try
+            {
+                filter ??= new ReviewFilterViewModel();
+                filter.Status = "pending"; // فرض عرض المراجعات المعلقة فقط
+
+                var currentUserId = GetCurrentUserId();
+                var currentUser = await GetCurrentUserAsync();
+
+                if (currentUser == null)
+                    return RedirectToAction("Login", "Account");
+
+                // الحصول على المراجعات المعلقة فقط
+                IQueryable<Review> reviewsQuery = _context.Reviews
+                    .Include(r => r.Research)
+                        .ThenInclude(res => res.Authors)
+                    .Include(r => r.Reviewer)
+                    .Where(r => !r.IsDeleted && !r.IsCompleted) // فقط المراجعات غير المكتملة
+                    .Where(r => r.ReviewerId == currentUserId); // فقط المراجعات المخصصة للمستخدم الحالي
+
+                // تطبيق الفلاتر الإضافية
+                if (!string.IsNullOrEmpty(filter.SearchTerm))
+                {
+                    reviewsQuery = reviewsQuery.Where(r =>
+                        r.Research.Title.Contains(filter.SearchTerm) ||
+                        r.Research.TitleEn.Contains(filter.SearchTerm));
+                }
+
+                if (!string.IsNullOrEmpty(filter.Track) && Enum.TryParse<ResearchTrack>(filter.Track, out var track))
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.Research.Track == track);
+                }
+
+                if (filter.FromDate.HasValue)
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.AssignedDate.Date >= filter.FromDate.Value.Date);
+                }
+
+                if (filter.ToDate.HasValue)
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.AssignedDate.Date <= filter.ToDate.Value.Date);
+                }
+
+                // ترتيب حسب الأولوية (المتأخرة أولاً، ثم الأقرب للانتهاء)
+                reviewsQuery = reviewsQuery.OrderBy(r => r.Deadline.HasValue && DateTime.UtcNow > r.Deadline.Value ? 0 : 1)
+                                          .ThenBy(r => r.Deadline);
+
+                // الحصول على العدد الكلي
+                var totalCount = await reviewsQuery.CountAsync();
+
+                // تطبيق التقسيم
+                var reviews = await reviewsQuery
+                    .Skip((filter.Page - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToListAsync();
+
+                // تحويل إلى ViewModel
+                var reviewItems = reviews.Select(r => new ReviewItemViewModel
+                {
+                    Id = r.Id,
+                    ResearchId = r.ResearchId,
+                    ResearchTitle = r.Research.Title,
+                    ResearchTitleEn = r.Research.TitleEn,
+                    ResearchAuthor = r.Research.Authors?.FirstOrDefault()?.FirstName + " " + r.Research.Authors?.FirstOrDefault()?.LastName ?? "",
+                    Track = r.Research.Track,
+                    TrackDisplayName = GetTrackDisplayName(r.Research.Track),
+                    ReviewerId = r.ReviewerId,
+                    ReviewerName = $"{r.Reviewer?.FirstName} {r.Reviewer?.LastName}",
+                    AssignedDate = r.AssignedDate,
+                    DueDate = r.Deadline,
+                    CompletedDate = r.CompletedDate,
+                    IsCompleted = r.IsCompleted,
+                    Decision = r.Decision
+                }).ToList();
+
+                // حساب الإحصائيات
+                var allPendingReviews = await _context.Reviews
+                    .Where(r => !r.IsDeleted && !r.IsCompleted && r.ReviewerId == currentUserId)
+                    .ToListAsync();
+
+                var statistics = new ReviewStatisticsViewModel
+                {
+                    TotalReviews = allPendingReviews.Count,
+                    PendingReviews = allPendingReviews.Count,
+                    CompletedReviews = 0,
+                    OverdueReviews = allPendingReviews.Count(r => r.Deadline.HasValue && DateTime.UtcNow > r.Deadline.Value),
+                    AverageScore = 0 // لا يوجد نتائج للمراجعات المعلقة
+                };
+
+                // إنشاء النتيجة المقسمة
+                var pagedResult = new ReviewPagedResult<ReviewItemViewModel>
+                {
+                    Items = reviewItems,
+                    TotalCount = totalCount,
+                    PageNumber = filter.Page,
+                    PageSize = filter.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize)
+                };
+
+                // إعداد خيارات التراك
+                var trackOptions = Enum.GetValues<ResearchTrack>()
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.ToString(),
+                        Text = GetTrackDisplayName(t)
+                    }).ToList();
+
+                var model = new ReviewListViewModel
+                {
+                    Reviews = pagedResult,
+                    Filter = filter,
+                    Statistics = statistics,
+                    TrackOptions = trackOptions,
+                    CurrentUserId = currentUserId,
+                    CurrentUserRole = currentUser.Role,
+                    CanCreateReview = false, // في صفحة المعلقة لا نحتاج إنشاء جديد
+                    CanManageReviews = false
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error loading pending reviews for user {UserId}", GetCurrentUserId());
+                AddErrorMessage("حدث خطأ في تحميل المراجعات المعلقة");
+                return View(new ReviewListViewModel());
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Reviewer")]
+        public async Task<IActionResult> Completed(ReviewFilterViewModel filter = null)
+        {
+            try
+            {
+                filter ??= new ReviewFilterViewModel();
+                filter.Status = "completed"; // فرض عرض المراجعات المكتملة فقط
+
+                var currentUserId = GetCurrentUserId();
+                var currentUser = await GetCurrentUserAsync();
+
+                if (currentUser == null)
+                    return RedirectToAction("Login", "Account");
+
+                // الحصول على المراجعات المكتملة فقط
+                IQueryable<Review> reviewsQuery = _context.Reviews
+                    .Include(r => r.Research)
+                        .ThenInclude(res => res.Authors)
+                    .Include(r => r.Reviewer)
+                    .Where(r => !r.IsDeleted && r.IsCompleted) // فقط المراجعات المكتملة
+                    .Where(r => r.ReviewerId == currentUserId); // فقط المراجعات المخصصة للمستخدم الحالي
+
+                // تطبيق الفلاتر الإضافية
+                if (!string.IsNullOrEmpty(filter.SearchTerm))
+                {
+                    reviewsQuery = reviewsQuery.Where(r =>
+                        r.Research.Title.Contains(filter.SearchTerm) ||
+                        r.Research.TitleEn.Contains(filter.SearchTerm));
+                }
+
+                if (!string.IsNullOrEmpty(filter.Track) && Enum.TryParse<ResearchTrack>(filter.Track, out var track))
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.Research.Track == track);
+                }
+
+                if (filter.FromDate.HasValue)
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.CompletedDate.HasValue && r.CompletedDate.Value.Date >= filter.FromDate.Value.Date);
+                }
+
+                if (filter.ToDate.HasValue)
+                {
+                    reviewsQuery = reviewsQuery.Where(r => r.CompletedDate.HasValue && r.CompletedDate.Value.Date <= filter.ToDate.Value.Date);
+                }
+
+                // ترتيب حسب تاريخ الإكمال (الأحدث أولاً)
+                reviewsQuery = reviewsQuery.OrderByDescending(r => r.CompletedDate);
+
+                // الحصول على العدد الكلي
+                var totalCount = await reviewsQuery.CountAsync();
+
+                // تطبيق التقسيم
+                var reviews = await reviewsQuery
+                    .Skip((filter.Page - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToListAsync();
+
+                // تحويل إلى ViewModel
+                var reviewItems = reviews.Select(r => new ReviewItemViewModel
+                {
+                    Id = r.Id,
+                    ResearchId = r.ResearchId,
+                    ResearchTitle = r.Research.Title,
+                    ResearchTitleEn = r.Research.TitleEn,
+                    ResearchAuthor = r.Research.Authors?.FirstOrDefault()?.FirstName + " " + r.Research.Authors?.FirstOrDefault()?.LastName ?? "",
+                    Track = r.Research.Track,
+                    TrackDisplayName = GetTrackDisplayName(r.Research.Track),
+                    ReviewerId = r.ReviewerId,
+                    ReviewerName = $"{r.Reviewer?.FirstName} {r.Reviewer?.LastName}",
+                    AssignedDate = r.AssignedDate,
+                    DueDate = r.Deadline,
+                    CompletedDate = r.CompletedDate,
+                    IsCompleted = r.IsCompleted,
+                    Score = r.IsCompleted ? (int?)((r.OriginalityScore + r.MethodologyScore + r.ClarityScore + r.SignificanceScore) / 4) : null,
+                    Decision = r.Decision,
+                    CommentsToAuthor = r.CommentsToAuthor,
+                    CommentsToTrackManager = r.CommentsToTrackManager
+                }).ToList();
+
+                // حساب الإحصائيات
+                var allCompletedReviews = await _context.Reviews
+                    .Where(r => !r.IsDeleted && r.IsCompleted && r.ReviewerId == currentUserId)
+                    .ToListAsync();
+
+                var statistics = new ReviewStatisticsViewModel
+                {
+                    TotalReviews = allCompletedReviews.Count,
+                    PendingReviews = 0,
+                    CompletedReviews = allCompletedReviews.Count,
+                    OverdueReviews = 0, // المراجعات المكتملة لا تُعتبر متأخرة
+                    AverageScore = allCompletedReviews.Any()
+                        ? allCompletedReviews.Average(r => (r.OriginalityScore + r.MethodologyScore + r.ClarityScore + r.SignificanceScore) / 4.0)
+                        : 0,
+                    AcceptedCount = allCompletedReviews.Count(r => r.Decision == ReviewDecision.AcceptAsIs),
+                    RejectedCount = allCompletedReviews.Count(r => r.Decision == ReviewDecision.Reject),
+                    MinorRevisionsCount = allCompletedReviews.Count(r => r.Decision == ReviewDecision.AcceptWithMinorRevisions),
+                    MajorRevisionsCount = allCompletedReviews.Count(r => r.Decision == ReviewDecision.MajorRevisionsRequired)
+                };
+
+                // إنشاء النتيجة المقسمة
+                var pagedResult = new ReviewPagedResult<ReviewItemViewModel>
+                {
+                    Items = reviewItems,
+                    TotalCount = totalCount,
+                    PageNumber = filter.Page,
+                    PageSize = filter.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize)
+                };
+
+                // إعداد خيارات التراك
+                var trackOptions = Enum.GetValues<ResearchTrack>()
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.ToString(),
+                        Text = GetTrackDisplayName(t)
+                    }).ToList();
+
+                var model = new ReviewListViewModel
+                {
+                    Reviews = pagedResult,
+                    Filter = filter,
+                    Statistics = statistics,
+                    TrackOptions = trackOptions,
+                    CurrentUserId = currentUserId,
+                    CurrentUserRole = currentUser.Role,
+                    CanCreateReview = false,
+                    CanManageReviews = false
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error loading completed reviews for user {UserId}", GetCurrentUserId());
+                AddErrorMessage("حدث خطأ في تحميل المراجعات المكتملة");
+                return View(new ReviewListViewModel());
+            }
+        }
+
+        // إضافة هذا الـ Action إلى ReviewController.cs لدعم الملخص السريع
+
+        [HttpGet]
+        [Authorize(Roles = "Reviewer,TrackManager,ConferenceManager,SystemAdmin")]
+        public async Task<IActionResult> GetReviewSummary(int id)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var currentUser = await GetCurrentUserAsync();
+
+                if (currentUser == null)
+                    return Unauthorized();
+
+                var review = await _context.Reviews
+                    .Include(r => r.Research)
+                        .ThenInclude(res => res.Authors)
+                    .Include(r => r.Reviewer)
+                    .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+
+                if (review == null)
+                    return NotFound();
+
+                // التحقق من الصلاحيات
+                bool canView = false;
+                if (currentUser.Role == UserRole.Reviewer && review.ReviewerId == currentUserId)
+                    canView = true;
+                else if (currentUser.Role == UserRole.TrackManager)
+                {
+                    var trackManager = await _context.TrackManagers
+                        .FirstOrDefaultAsync(tm => tm.UserId == currentUserId);
+                    if (trackManager != null && review.Research.Track == trackManager.Track)
+                        canView = true;
+                }
+                else if (currentUser.Role == UserRole.ConferenceManager || currentUser.Role == UserRole.SystemAdmin)
+                    canView = true;
+
+                if (!canView)
+                    return Forbid();
+
+                // إنشاء البيانات للملخص
+                var summaryData = new
+                {
+                    ReviewId = review.Id,
+                    ResearchTitle = review.Research.Title,
+                    ResearchAuthor = review.Research.Authors?.FirstOrDefault()?.FirstName + " " +
+                                   review.Research.Authors?.FirstOrDefault()?.LastName ?? "",
+                    ReviewerName = $"{review.Reviewer?.FirstName} {review.Reviewer?.LastName}",
+                    AssignedDate = review.AssignedDate.ToString("yyyy/MM/dd"),
+                    CompletedDate = review.CompletedDate?.ToString("yyyy/MM/dd") ?? "غير مكتمل",
+                    OverallScore = review.IsCompleted ?
+                        (review.OriginalityScore + review.MethodologyScore + review.ClarityScore + review.SignificanceScore) / 4.0 : 0,
+                    Scores = new
+                    {
+                        Originality = review.OriginalityScore,
+                        Methodology = review.MethodologyScore,
+                        Clarity = review.ClarityScore,
+                        Significance = review.SignificanceScore
+                    },
+                    Decision = review.Decision.ToString(),
+                    DecisionDisplayName = GetDecisionDisplayName(review.Decision),
+                    CommentsToAuthor = review.CommentsToAuthor,
+                    CommentsToTrackManager = review.CommentsToTrackManager,
+                    IsCompleted = review.IsCompleted,
+                    Track = review.Research.Track.ToString()
+                };
+
+                return PartialView("_ReviewSummaryPartial", summaryData);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error loading review summary for review {ReviewId}", id);
+                return StatusCode(500, "حدث خطأ في تحميل ملخص المراجعة");
+            }
+        }
+
+        private string GetDecisionDisplayName(ReviewDecision decision)
+        {
+            return decision switch
+            {
+                ReviewDecision.AcceptAsIs => "قبول مباشر",
+                ReviewDecision.Reject => "رفض",
+                ReviewDecision.AcceptWithMinorRevisions => "قبول مع تعديلات طفيفة",
+                ReviewDecision.MajorRevisionsRequired => "قبول مع تعديلات جوهرية",
+                ReviewDecision.NotReviewed => "لم تتم المراجعة",
+                _ => "غير محدد"
+            };
+        }
+
     }
-}
+
+
+    }

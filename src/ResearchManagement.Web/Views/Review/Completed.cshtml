@@ -1,0 +1,857 @@
+﻿@* Views/Review/Completed.cshtml *@
+@model ResearchManagement.Web.Models.ViewModels.Review.ReviewListViewModel
+@{
+    ViewData["Title"] = "المراجعات المكتملة";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-check-circle me-2 text-success"></i>المراجعات المكتملة</h2>
+            <p class="text-muted">البحوث التي تمت مراجعتها وتقييمها</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a asp-action="Index" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-2"></i>جميع المراجعات
+                </a>
+                <a asp-action="Pending" class="btn btn-outline-warning">
+                    <i class="fas fa-clock me-2"></i>المراجعات المعلقة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">إجمالي المكتملة</h5>
+                            <h3 class="mb-0">@Model.Statistics.CompletedReviews</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">متوسط التقييم</h5>
+                            <h3 class="mb-0">@Model.Statistics.AverageScore.ToString("F1")</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-star fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">مقبولة</h5>
+                            <h3 class="mb-0">@Model.Statistics.AcceptedCount</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-thumbs-up fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">مرفوضة</h5>
+                            <h3 class="mb-0">@Model.Statistics.RejectedCount</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-times-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision Distribution Chart -->
+    @if (Model.Statistics.CompletedReviews > 0)
+    {
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>توزيع القرارات
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="decisionChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>إحصائيات التقييم
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 text-center mb-3">
+                                <div class="h4 text-success">@Model.Statistics.AcceptedCount</div>
+                                <small class="text-muted">قبول مباشر</small>
+                            </div>
+                            <div class="col-6 text-center mb-3">
+                                <div class="h4 text-info">@Model.Statistics.MinorRevisionsCount</div>
+                                <small class="text-muted">تعديلات طفيفة</small>
+                            </div>
+                            <div class="col-6 text-center mb-3">
+                                <div class="h4 text-warning">@Model.Statistics.MajorRevisionsCount</div>
+                                <small class="text-muted">تعديلات جوهرية</small>
+                            </div>
+                            <div class="col-6 text-center mb-3">
+                                <div class="h4 text-danger">@Model.Statistics.RejectedCount</div>
+                                <small class="text-muted">رفض</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between">
+                                <small>معدل القبول:</small>
+                                <strong>@(((double)(Model.Statistics.AcceptedCount + Model.Statistics.MinorRevisionsCount + Model.Statistics.MajorRevisionsCount) / Model.Statistics.CompletedReviews * 100).ToString("F1"))%</strong>
+                            </div>
+                            <div class="progress mt-1">
+                                <div class="progress-bar bg-success" style="width: @(((double)(Model.Statistics.AcceptedCount + Model.Statistics.MinorRevisionsCount + Model.Statistics.MajorRevisionsCount) / Model.Statistics.CompletedReviews * 100).ToString("F1"))%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>تصفية النتائج</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Completed" method="get">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Filter.SearchTerm" class="form-label">البحث في العنوان</label>
+                        <input asp-for="Filter.SearchTerm" class="form-control" placeholder="عنوان البحث...">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">القرار</label>
+                        <select name="decision" class="form-select">
+                            <option value="">جميع القرارات</option>
+                            <option value="1">قبول مباشر</option>
+                            <option value="3">تعديلات طفيفة</option>
+                            <option value="4">تعديلات جوهرية</option>
+                            <option value="2">رفض</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.Track" class="form-label">المسار</label>
+                        <select asp-for="Filter.Track" asp-items="Model.TrackOptions" class="form-select">
+                            <option value="">جميع المسارات</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.FromDate" class="form-label">من تاريخ</label>
+                        <input asp-for="Filter.FromDate" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Filter.ToDate" class="form-label">إلى تاريخ</label>
+                        <input asp-for="Filter.ToDate" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-1 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">المراجعات المكتملة (@Model.Reviews.TotalCount)</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel me-1"></i>تصدير Excel
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="printReviews()">
+                        <i class="fas fa-print me-1"></i>طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Reviews.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="reviewsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="30%">عنوان البحث</th>
+                                <th width="15%">المسار</th>
+                                <th width="10%">تاريخ الإكمال</th>
+                                <th width="8%">التقييم</th>
+                                <th width="15%">القرار</th>
+                                <th width="10%">مدة المراجعة</th>
+                                <th width="7%">الحالة</th>
+                                <th width="5%">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var review in Model.Reviews.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@review.ResearchTitle</div>
+                                        @if (!string.IsNullOrEmpty(review.ResearchTitleEn))
+                                        {
+                                            <small class="text-muted">@review.ResearchTitleEn</small>
+                                        }
+                                        <div class="mt-1">
+                                            <small class="text-info">
+                                                <i class="fas fa-user me-1"></i>@review.ResearchAuthor
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@review.TrackDisplayName</span>
+                                    </td>
+                                    <td>
+                                        @if (review.CompletedDate.HasValue)
+                                        {
+                                            <span class="text-muted">@review.CompletedDate.Value.ToString("yyyy/MM/dd")</span>
+                                            <br>
+
+                                            <small class="text-muted">@review.CompletedDate.Value.ToString("HH:mm")</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (review.Score.HasValue)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge @(review.Score.Value >= 8 ? "bg-success" : review.Score.Value >= 6 ? "bg-warning" : "bg-danger") me-2">
+                                                    @review.Score.Value/10
+                                                </span>
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar @(review.Score.Value >= 8 ? "bg-success" : review.Score.Value >= 6 ? "bg-warning" : "bg-danger")"
+                                                         style="width: @(review.Score.Value * 10)%"></div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (review.Decision.HasValue)
+                                        {
+                                            <span class="badge @review.DecisionBadgeClass">@review.DecisionDisplayName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">غير محدد</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (review.CompletedDate.HasValue)
+                                        {
+                                            var duration = (review.CompletedDate.Value - review.AssignedDate).Days;
+                                            <span class="@(duration <= 7 ? "text-success" : duration <= 14 ? "text-warning" : "text-danger")">
+                                                @duration يوم
+                                            </span>
+                                            @if (review.DueDate.HasValue && review.CompletedDate.Value > review.DueDate.Value)
+                                            {
+                                                <br>
+
+                                                <small class="text-danger">متأخر</small>
+                                            }
+                                            else
+                                            {
+                                                <br>
+
+                                                <small class="text-success">في الوقت</small>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">مكتملة</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@review.Id"
+                                               class="btn btn-outline-primary" title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="showReviewSummary(@review.Id)" title="ملخص سريع">
+                                                <i class="fas fa-info"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.Reviews.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav>
+                            <ul class="pagination justify-content-center mb-0">
+                                @if (Model.Reviews.HasPreviousPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Completed" asp-route-page="@(Model.Reviews.PageNumber - 1)"
+                                           asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                           asp-route-track="@Model.Filter.Track"
+                                           asp-route-fromDate="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")">السابق</a>
+                                    </li>
+                                }
+
+                                @for (int i = Math.Max(1, Model.Reviews.PageNumber - 2); i <= Math.Min(Model.Reviews.TotalPages, Model.Reviews.PageNumber + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.Reviews.PageNumber ? "active" : "")">
+                                        <a class="page-link" asp-action="Completed" asp-route-page="@i"
+                                           asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                           asp-route-track="@Model.Filter.Track"
+                                           asp-route-fromDate="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")">@i</a>
+                                    </li>
+                                }
+
+                                @if (Model.Reviews.HasNextPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Completed" asp-route-page="@(Model.Reviews.PageNumber + 1)"
+                                           asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                           asp-route-track="@Model.Filter.Track"
+                                           asp-route-fromDate="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")">التالي</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5>لا توجد مراجعات مكتملة</h5>
+                    <p class="text-muted">لم تقم بإكمال أي مراجعات بعد.</p>
+                    <a asp-action="Pending" class="btn btn-primary">
+                        <i class="fas fa-clock me-2"></i>عرض المراجعات المعلقة
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Review Summary Modal -->
+<div class="modal fade" id="reviewSummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ملخص المراجعة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="reviewSummaryContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize decision chart
+        @if (Model.Statistics.CompletedReviews > 0)
+        {
+            <text>
+                    initializeDecisionChart();
+            </text>
+        }
+
+            // Add tooltips
+            $('[title]').tooltip();
+        });
+
+        @if (Model.Statistics.CompletedReviews > 0)
+        {
+            <text>
+                function initializeDecisionChart() {
+                    const ctx = document.getElementById('decisionChart').getContext('2d');
+
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['قبول مباشر', 'تعديلات طفيفة', 'تعديلات جوهرية', 'رفض'],
+                            datasets: [{
+                                data: [
+                @Model.Statistics.AcceptedCount,
+                @Model.Statistics.MinorRevisionsCount,
+                @Model.Statistics.MajorRevisionsCount,
+                @Model.Statistics.RejectedCount
+                                ],
+                                backgroundColor: [
+                                    '#28a745', // أخضر للقبول
+                                    '#17a2b8', // أزرق للتعديلات الطفيفة
+                                    '#ffc107', // أصفر للتعديلات الجوهرية
+                                    '#dc3545'  // أحمر للرفض
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true,
+                                        font: {
+                                            family: 'Tajawal, Arial, sans-serif'
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                            return `${label}: ${value} (${percentage}%)`;
+                                        }
+                                    },
+                                    titleFont: {
+                                        family: 'Tajawal, Arial, sans-serif'
+                                    },
+                                    bodyFont: {
+                                        family: 'Tajawal, Arial, sans-serif'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            </text>
+        }
+
+        function showReviewSummary(reviewId) {
+            // Load review summary via AJAX
+            $.get('/Review/GetReviewSummary/' + reviewId)
+                .done(function(data) {
+                    $('#reviewSummaryContent').html(data);
+                    $('#reviewSummaryModal').modal('show');
+                })
+                .fail(function() {
+                    alert('حدث خطأ في تحميل ملخص المراجعة');
+                });
+        }
+
+        function exportToExcel() {
+            // Export table to Excel
+            var table = document.getElementById('reviewsTable');
+            var ws = XLSX.utils.table_to_sheet(table);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'المراجعات المكتملة');
+            XLSX.writeFile(wb, 'completed_reviews_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+        }
+
+        function printReviews() {
+            // Open print dialog for the table
+            var printWindow = window.open('', '_blank');
+            var tableHTML = document.getElementById('reviewsTable').outerHTML;
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>المراجعات المكتملة</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; direction: rtl; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                        th { background-color: #f2f2f2; }
+                        .badge { padding: 2px 6px; border-radius: 3px; }
+                        .bg-success { background-color: #28a745; color: white; }
+                        .bg-warning { background-color: #ffc107; color: black; }
+                        .bg-danger { background-color: #dc3545; color: white; }
+                        .bg-info { background-color: #17a2b8; color: white; }
+        @@media print { .btn { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h2>المراجعات المكتملة</h2>
+                    <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+                    ${tableHTML}
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Enhanced filtering
+        $('#decisionFilter').on('change', function() {
+            var selectedDecision = $(this).val();
+            var rows = $('#reviewsTable tbody tr');
+
+            if (selectedDecision === '') {
+                rows.show();
+            } else {
+                rows.each(function() {
+                    var decisionBadge = $(this).find('td:nth-child(5) .badge');
+                    var decisionText = decisionBadge.text().trim();
+
+                    var shouldShow = false;
+                    switch (selectedDecision) {
+                        case '1': shouldShow = decisionText.includes('قبول'); break;
+                        case '2': shouldShow = decisionText.includes('رفض'); break;
+                        case '3': shouldShow = decisionText.includes('طفيفة'); break;
+                        case '4': shouldShow = decisionText.includes('جوهرية'); break;
+                    }
+
+                    $(this).toggle(shouldShow);
+                });
+            }
+        });
+
+        // Score highlighting
+        $('.progress-bar').each(function() {
+            var width = parseFloat($(this).css('width'));
+            var parentWidth = $(this).parent().width();
+            var percentage = (width / parentWidth) * 100;
+
+            if (percentage >= 80) {
+                $(this).addClass('bg-success');
+            } else if (percentage >= 60) {
+                $(this).addClass('bg-warning');
+            } else {
+                $(this).addClass('bg-danger');
+            }
+        });
+
+        // Add animation to statistics cards
+        $('.card-body h3').each(function() {
+            var $this = $(this);
+            var countTo = parseInt($this.text());
+
+            $({ countNum: 0 }).animate({
+                countNum: countTo
+            }, {
+                duration: 1500,
+                easing: 'linear',
+                step: function() {
+                    $this.text(Math.floor(this.countNum));
+                },
+                complete: function() {
+                    $this.text(this.countNum);
+                }
+            });
+        });
+
+        // Sort table functionality
+        function sortTable(columnIndex, isNumeric = false) {
+            var table = document.getElementById('reviewsTable');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort(function(a, b) {
+                var aVal = a.children[columnIndex].textContent.trim();
+                var bVal = b.children[columnIndex].textContent.trim();
+
+                if (isNumeric) {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                    return bVal - aVal; // Descending order for numeric
+                } else {
+                    return aVal.localeCompare(bVal, 'ar');
+                }
+            });
+
+            // Clear tbody and re-append sorted rows
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Add click handlers for sortable headers
+        $('#reviewsTable th').click(function() {
+            var columnIndex = $(this).index();
+            var isNumeric = $(this).hasClass('numeric-sort');
+            sortTable(columnIndex, isNumeric);
+
+            // Visual feedback
+            $('#reviewsTable th').removeClass('sorted-asc sorted-desc');
+            $(this).addClass('sorted-desc');
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .opacity-75 {
+            opacity: 0.75;
+        }
+
+        .progress {
+            height: 8px;
+        }
+
+        .badge {
+            font-size: 0.8em;
+        }
+
+        .card-header {
+            font-weight: 600;
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.4rem;
+        }
+
+        /* Table enhancements */
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            user-select: none;
+        }
+
+            .table th:hover {
+                background-color: #e9ecef;
+            }
+
+            .table th.sorted-asc::after {
+                content: ' ↑';
+                color: #007bff;
+            }
+
+            .table th.sorted-desc::after {
+                content: ' ↓';
+                color: #007bff;
+            }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        /* Decision badges */
+        .badge.bg-success {
+            background-color: #28a745 !important;
+        }
+
+        .badge.bg-info {
+            background-color: #17a2b8 !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+
+        .badge.bg-danger {
+            background-color: #dc3545 !important;
+        }
+
+        /* Progress bars */
+        .progress-bar.bg-success {
+            background-color: #28a745 !important;
+        }
+
+        .progress-bar.bg-warning {
+            background-color: #ffc107 !important;
+        }
+
+        .progress-bar.bg-danger {
+            background-color: #dc3545 !important;
+        }
+
+        /* Statistics cards animation */
+        .card-body h3 {
+            font-weight: bold;
+            font-size: 2rem;
+        }
+
+        /* Chart container */
+        #decisionChart {
+            max-height: 300px;
+        }
+
+        /* Modal enhancements */
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        /* Print styles */
+        @@media print {
+            .btn, .card-header, .pagination, .modal
+
+        {
+            display: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .table {
+            font-size: 12px;
+        }
+
+        .badge {
+            border: 1px solid #000;
+            padding: 2px 4px;
+        }
+
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .table-responsive
+
+        {
+            font-size: 0.875rem;
+        }
+
+        .btn-group .btn {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .card-body h3 {
+            font-size: 1.5rem;
+        }
+
+        .progress {
+            height: 6px;
+        }
+
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+            .loading::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 20px;
+                height: 20px;
+                margin: -10px 0 0 -10px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #007bff;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+        @@keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        /* Custom scrollbar for tables */
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+            .table-responsive::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+
+        /* Enhanced card styling */
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            border-radius: 0.375rem;
+        }
+
+            .card:hover {
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            }
+
+        /* Pagination styling */
+        .pagination .page-link {
+            color: #495057;
+            border-color: #dee2e6;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .pagination .page-link:hover {
+            color: #0056b3;
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+    </style>
+}
