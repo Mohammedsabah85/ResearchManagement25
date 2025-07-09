@@ -26,6 +26,10 @@ namespace ResearchManagement.Infrastructure.Data
         public DbSet<TrackReviewer> TrackReviewers { get; set; }
         public DbSet<ResearchStatusHistory> ResearchStatusHistories { get; set; }
         public DbSet<EmailNotification> EmailNotifications { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ResearchTrackHistory> ResearchTrackHistories { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

@@ -223,11 +223,11 @@ builder.Services.AddScoped<IResearchStatusHistoryRepository, ResearchStatusHisto
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
 
+    // 4.  ”ÃÌ· «·Œœ„«  «·√Œ—Ï «·„ÿ·Ê»…
 
-// 4.  ”ÃÌ· «·Œœ„«  «·√Œ—Ï «·„ÿ·Ê»…
-
-builder.Services.AddScoped<IResearchRepository, ResearchRepository>();
+    builder.Services.AddScoped<IResearchRepository, ResearchRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IResearchStatusHistoryRepository, ResearchStatusHistoryRepository>();
@@ -252,10 +252,10 @@ builder.Services.AddScoped<IRequestHandler<GetResearchByIdQuery, ResearchDto?>, 
 builder.Services.AddScoped<IRequestHandler<GetResearchFileByIdQuery, ResearchFileDto?>, GetResearchFileByIdQueryHandler>();
 builder.Services.AddScoped<IRequestHandler<GetResearchListQuery, PagedResult<ResearchDto>>, GetResearchListQueryHandler>();
 
+ //builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
-
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+    builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // 6. ≈÷«›… AutoMapper
 builder.Services.AddAutoMapper(typeof(ApplicationMappingProfile), typeof(WebMappingProfile));

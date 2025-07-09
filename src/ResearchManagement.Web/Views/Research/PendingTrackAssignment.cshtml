@@ -1,0 +1,683 @@
+﻿@* Views/Research/PendingTrackAssignment.cshtml *@
+@model ResearchManagement.Web.Models.ViewModels.Research.PendingTrackAssignmentViewModel
+@{
+    ViewData["Title"] = "تحديد المسارات المعلقة";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-route me-2 text-warning"></i>تحديد المسارات المعلقة</h2>
+            <p class="text-muted">البحوث التي تحتاج لتحديد المسار المناسب قبل الإرسال لمدير المسار</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-success" id="bulkAssignBtn" disabled>
+                    <i class="fas fa-check-double me-2"></i>تحديد مجمع
+                </button>
+                <button type="button" class="btn btn-info" id="autoSuggestBtn">
+                    <i class="fas fa-magic me-2"></i>اقتراح تلقائي
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-2"></i>تحديث
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">المعلقة</h5>
+                            <h3 class="mb-0">@Model.TotalPending</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">عاجلة</h5>
+                            <h3 class="mb-0">@Model.PendingResearches.Count(r => r.IsUrgent)</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">اليوم</h5>
+                            <h3 class="mb-0">@Model.PendingResearches.Count(r => r.SubmissionDate.Date == DateTime.Today)</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-calendar-day fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">متوسط الانتظار</h5>
+                            <h3 class="mb-0">@(Model.PendingResearches.Any() ? Model.PendingResearches.Average(r => r.DaysSinceSubmission).ToString("F0") : "0") يوم</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-hourglass-half fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Track Distribution Chart -->
+    @if (Model.TrackDistribution.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>توزيع البحوث حسب المسار الحالي
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var track in Model.TrackDistribution)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-primary">@GetTrackDisplayName(track.Key)</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                        <div class="progress-bar bg-primary" style="width: @((double)track.Value / Model.TotalPending * 100)%"></div>
+                                    </div>
+                                    <span class="badge bg-primary">@track.Value</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Bulk Actions Panel -->
+    <div class="card mb-4" id="bulkActionsPanel" style="display: none;">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>الإجراءات المجمعة
+                <span class="badge bg-light text-dark ms-2" id="selectedCount">0</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            <form id="bulkAssignForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">المسار الجديد</label>
+                        <select id="bulkTrack" class="form-select" required>
+                            <option value="">اختر المسار</option>
+                            <option value="1">Energy and Renewable Energy</option>
+                            <option value="2">Electromechanical System, and Mechatronics Engineering</option>
+                            <option value="3">Material Science & Mechanical Engineering</option>
+                            <option value="4">Navigation & Guidance Systems, Computer and Communication Engineering</option>
+                            <option value="5">Electrical & Electronics Engineering</option>
+                            <option value="6">Avionics Systems, Aircraft and Unmanned Aircraft Engineering</option>
+                            <option value="7">Earth's Natural Resources, Gas and Petroleum Systems & Equipment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">ملاحظات</label>
+                        <input type="text" id="bulkNotes" class="form-control" placeholder="ملاحظات حول التحديد المجمع...">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>تطبيق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Researches List -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">البحوث المعلقة (@Model.TotalPending)</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        تحديد الكل
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.PendingResearches.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="3%">
+                                    <input type="checkbox" class="form-check-input" id="selectAllHeader">
+                                </th>
+                                <th width="5%">الأولوية</th>
+                                <th width="35%">عنوان البحث</th>
+                                <th width="15%">المؤلف الرئيسي</th>
+                                <th width="10%">تاريخ التقديم</th>
+                                <th width="12%">المسار الحالي</th>
+                                <th width="12%">المسار المقترح</th>
+                                <th width="8%">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var research in Model.PendingResearches.OrderByDescending(r => r.IsUrgent).ThenBy(r => r.SubmissionDate))
+                            {
+                                <tr class="@(research.IsUrgent ? "table-warning" : "")" data-research-id="@research.Id">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input research-checkbox" value="@research.Id">
+                                    </td>
+                                    <td class="text-center">
+                                        @if (research.IsUrgent)
+                                        {
+                                            <span class="badge bg-danger" title="عاجل - أكثر من 7 أيام">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </span>
+                                        }
+                                        else if (research.DaysSinceSubmission >= 3)
+                                        {
+                                            <span class="badge bg-warning" title="يحتاج اهتمام">
+                                                <i class="fas fa-clock"></i>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success" title="جديد">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <a asp-action="Details" asp-route-id="@research.Id" class="text-decoration-none" target="_blank">
+                                                    @research.Title
+                                                </a>
+                                            </h6>
+                                            @if (!string.IsNullOrEmpty(research.TitleEn))
+                                            {
+                                                <small class="text-muted">@research.TitleEn</small>
+                                            }
+                                            <div class="mt-1">
+                                                <small class="text-info">
+                                                    منذ @research.DaysSinceSubmission يوم
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@research.SubmittedByName</strong>
+                                            @if (research.Authors.Any())
+                                            {
+                                                <br>
+                                                <small class="text-muted">
+                                                    @string.Join(", ", research.Authors.Take(2).Select(a => $"{a.FirstName} {a.LastName}"))
+                                                    @if (research.Authors.Count > 2)
+                                                    {
+                                                        <span> وآخرون</span>
+                                                    }
+                                                </small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">@research.SubmissionDate.ToString("yyyy/MM/dd")</span>
+                                        <br><small class="text-muted">@research.SubmissionDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@research.CurrentTrackDisplayName</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (research.SuggestedTrack != research.CurrentTrack)
+                                            {
+                                                <span class="badge bg-info me-2">@research.SuggestedTrackDisplayName</span>
+                                                <small class="text-success">
+                                                    <i class="fas fa-robot" title="اقتراح تلقائي"></i>
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">مطابق</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                    onclick="showTrackAssignmentModal(@research.Id, '@research.Title', @((int)research.CurrentTrack), @((int)research.SuggestedTrack))"
+                                                    title="تحديد المسار">
+                                                <i class="fas fa-route"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info"
+                                                    onclick="showResearchPreview(@research.Id)"
+                                                    title="معاينة البحث">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5>جميع البحوث محددة المسار</h5>
+                    <p class="text-muted">لا توجد بحوث تحتاج لتحديد المسار حالياً</p>
+                    <a asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>عرض جميع البحوث
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Track Assignment Modal -->
+<div class="modal fade" id="trackAssignmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-route me-2"></i>تحديد المسار
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trackAssignmentForm">
+                    <input type="hidden" id="modalResearchId">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">عنوان البحث:</label>
+                        <div id="modalResearchTitle" class="text-muted"></div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">المسار الحالي:</label>
+                            <div id="modalCurrentTrack" class="badge bg-secondary"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">المسار المقترح:</label>
+                            <div id="modalSuggestedTrack" class="badge bg-info"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modalNewTrack" class="form-label">المسار الجديد *</label>
+                        <select id="modalNewTrack" class="form-select" required>
+                            <option value="">اختر المسار الجديد</option>
+                            <option value="1">Energy and Renewable Energy</option>
+                            <option value="2">Electromechanical System, and Mechatronics Engineering</option>
+                            <option value="3">Material Science & Mechanical Engineering</option>
+                            <option value="4">Navigation & Guidance Systems, Computer and Communication Engineering</option>
+                            <option value="5">Electrical & Electronics Engineering</option>
+                            <option value="6">Avionics Systems, Aircraft and Unmanned Aircraft Engineering</option>
+                            <option value="7">Earth's Natural Resources, Gas and Petroleum Systems & Equipment</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modalNotes" class="form-label">ملاحظات</label>
+                        <textarea id="modalNotes" class="form-control" rows="3"
+                                  placeholder="أضف ملاحظات حول سبب تحديد هذا المسار..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>تنبيه:</strong> سيتم إرسال البحث تلقائياً لمدير المسار الجديد بعد التحديد.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="useSuggestedBtn">
+                    <i class="fas fa-magic me-2"></i>استخدام المقترح
+                </button>
+                <button type="button" class="btn btn-success" id="assignTrackBtn">
+                    <i class="fas fa-check me-2"></i>تحديد المسار
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Research Preview Modal -->
+<div class="modal fade" id="researchPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>معاينة البحث
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="researchPreviewContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Select all functionality
+            $('#selectAll, #selectAllHeader').change(function() {
+                var isChecked = $(this).is(':checked');
+                $('.research-checkbox').prop('checked', isChecked);
+                updateSelectedCount();
+                toggleBulkActions();
+            });
+
+            // Individual checkbox change
+            $('.research-checkbox').change(function() {
+                updateSelectedCount();
+                toggleBulkActions();
+
+                // Update "select all" checkbox
+                var totalCheckboxes = $('.research-checkbox').length;
+                var checkedCheckboxes = $('.research-checkbox:checked').length;
+                $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+
+            // Auto suggest functionality
+            $('#autoSuggestBtn').click(function() {
+                if (confirm('هل تريد تطبيق الاقتراحات التلقائية لجميع البحوث؟')) {
+                    applyAutoSuggestions();
+                }
+            });
+
+            // Bulk assign functionality
+            $('#bulkAssignForm').submit(function(e) {
+                e.preventDefault();
+                performBulkAssignment();
+            });
+        });
+
+        function updateSelectedCount() {
+            var count = $('.research-checkbox:checked').length;
+            $('#selectedCount').text(count);
+        }
+
+        function toggleBulkActions() {
+            var hasSelected = $('.research-checkbox:checked').length > 0;
+            $('#bulkAssignBtn').prop('disabled', !hasSelected);
+            $('#bulkActionsPanel').toggle(hasSelected);
+        }
+
+        function showTrackAssignmentModal(researchId, title, currentTrack, suggestedTrack) {
+            $('#modalResearchId').val(researchId);
+            $('#modalResearchTitle').text(title);
+            $('#modalCurrentTrack').text(getTrackDisplayName(currentTrack));
+            $('#modalSuggestedTrack').text(getTrackDisplayName(suggestedTrack));
+
+            // Set suggested track as default
+            $('#modalNewTrack').val(suggestedTrack);
+
+            $('#trackAssignmentModal').modal('show');
+        }
+
+        function getTrackDisplayName(trackValue) {
+            const tracks = {
+                1: 'Energy and Renewable Energy',
+                2: 'Electromechanical System, and Mechatronics Engineering',
+                3: 'Material Science & Mechanical Engineering',
+                4: 'Navigation & Guidance Systems, Computer and Communication Engineering',
+                5: 'Electrical & Electronics Engineering',
+                6: 'Avionics Systems, Aircraft and Unmanned Aircraft Engineering',
+                7: 'Earth\'s Natural Resources, Gas and Petroleum Systems & Equipment'
+            };
+            return tracks[trackValue] || 'غير محدد';
+        }
+
+        // Use suggested track
+        $('#useSuggestedBtn').click(function() {
+            var suggestedTrack = $('#modalSuggestedTrack').text();
+            // Find the value for this track name
+            $('#modalNewTrack option').each(function() {
+                if ($(this).text() === suggestedTrack) {
+                    $('#modalNewTrack').val($(this).val());
+                    return false;
+                }
+            });
+        });
+
+        // Assign track
+        $('#assignTrackBtn').click(function() {
+            var researchId = $('#modalResearchId').val();
+            var newTrack = $('#modalNewTrack').val();
+            var notes = $('#modalNotes').val();
+
+            if (!newTrack) {
+                alert('يرجى اختيار المسار الجديد');
+                return;
+            }
+
+            assignTrack(researchId, newTrack, notes);
+        });
+
+        function assignTrack(researchId, newTrack, notes) {
+            var btn = $('#assignTrackBtn');
+            var originalText = btn.html();
+
+            btn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التحديد...').prop('disabled', true);
+
+            $.ajax({
+                url: '@Url.Action("AssignToTrack", "Research")',
+                type: 'POST',
+                data: {
+                    researchId: researchId,
+                    newTrack: newTrack,
+                    notes: notes,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        $('#trackAssignmentModal').modal('hide');
+
+                        // Remove the row from the table
+                        $(`tr[data-research-id="${researchId}"]`).fadeOut(300, function() {
+                            $(this).remove();
+                            updateStatistics();
+                        });
+                    } else {
+                        showToast('error', response.message);
+                    }
+                },
+                error: function() {
+                    showToast('error', 'حدث خطأ في الاتصال بالخادم');
+                },
+                complete: function() {
+                    btn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+
+        function performBulkAssignment() {
+            var selectedIds = $('.research-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) {
+                alert('يرجى اختيار بحوث للتحديد');
+                return;
+            }
+
+            var track = $('#bulkTrack').val();
+            var notes = $('#bulkNotes').val();
+
+            if (!track) {
+                alert('يرجى اختيار المسار');
+                return;
+            }
+
+            if (confirm(`هل تريد تحديد المسار لـ ${selectedIds.length} بحث؟`)) {
+                var assignments = selectedIds.map(id => ({
+                    researchId: parseInt(id),
+                    track: parseInt(track),
+                    notes: notes
+                }));
+
+                $.ajax({
+                    url: '@Url.Action("BulkAssignTracks", "Research")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(assignments),
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            location.reload();
+                        } else {
+                            showToast('error', response.message);
+                            if (response.errors && response.errors.length > 0) {
+                                console.log('Errors:', response.errors);
+                            }
+                        }
+                    },
+                    error: function() {
+                        showToast('error', 'حدث خطأ في التحديد المجمع');
+                    }
+                });
+            }
+        }
+
+        function applyAutoSuggestions() {
+            // Implementation for auto suggestions
+            showToast('info', 'جاري تطبيق الاقتراحات التلقائية...');
+            // You can implement this based on your requirements
+        }
+
+        function showResearchPreview(researchId) {
+            $('#researchPreviewContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>');
+            $('#researchPreviewModal').modal('show');
+
+            // Load research preview via AJAX
+            $.get(`@Url.Action("Details", "Research")/${researchId}`)
+                .done(function(data) {
+                    $('#researchPreviewContent').html(data);
+                })
+                .fail(function() {
+                    $('#researchPreviewContent').html('<div class="alert alert-danger">فشل في تحميل معاينة البحث</div>');
+                });
+        }
+
+        function updateStatistics() {
+            // Update the statistics cards
+            var remaining = $('.research-checkbox').length;
+            // Update UI accordingly
+        }
+
+        function showToast(type, message) {
+            var alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+
+            var toast = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas ${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            $('body').append(toast);
+
+            setTimeout(() => {
+                toast.alert('close');
+            }, 5000);
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .table-warning {
+            --bs-table-accent-bg: rgba(255, 193, 7, 0.1);
+        }
+
+        .opacity-75 {
+            opacity: 0.75;
+        }
+
+        .research-checkbox {
+            cursor: pointer;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.4rem;
+        }
+
+        .badge {
+            font-size: 0.8em;
+        }
+
+        .modal-xl {
+            max-width: 90%;
+        }
+
+        .progress {
+            height: 8px;
+        }
+    </style>
+}
+
+@functions {
+    private string GetTrackDisplayName(ResearchManagement.Domain.Enums.ResearchTrack track)
+    {
+        return track switch
+        {
+            ResearchManagement.Domain.Enums.ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+            ResearchManagement.Domain.Enums.ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+            ResearchManagement.Domain.Enums.ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+            ResearchManagement.Domain.Enums.ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+            ResearchManagement.Domain.Enums.ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+            ResearchManagement.Domain.Enums.ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+            ResearchManagement.Domain.Enums.ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
+            _ => track.ToString()
+        };
+    }
+}

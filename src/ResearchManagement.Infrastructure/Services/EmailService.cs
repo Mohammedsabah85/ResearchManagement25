@@ -41,7 +41,7 @@ namespace ResearchManagement.Infrastructure.Services
                     <p>نؤكد لكم استلام بحثكم العلمي بعنوان: <strong>{research.Title}</strong></p>
                     <p>رقم البحث: <strong>{research.Id}</strong></p>
                     <p>تاريخ التقديم: <strong>{research.SubmissionDate:yyyy/MM/dd}</strong></p>
-                    <p>التخصص: <strong>{GetTrackDisplayName(research.Track)}</strong></p>
+       
                     <p>الحالة الحالية: <strong>{GetStatusDisplayName(research.Status)}</strong></p>
                     <br>
                     <p>سيتم مراجعة بحثكم وإشعاركم بأي تطورات.</p>

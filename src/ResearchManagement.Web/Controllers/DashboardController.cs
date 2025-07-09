@@ -65,70 +65,70 @@ namespace ResearchManagement.Web.Controllers
             }
         }
 
-        private async Task<IActionResult> AdminDashboard()
-        {
-            try
-            {
-                var allResearches = await _context.Researches
-                    .Include(r => r.SubmittedBy)
-                    .Include(r => r.Authors)
-                    .ToListAsync();
+        //private async Task<IActionResult> AdminDashboard()
+        //{
+        //    try
+        //    {
+        //        var allResearches = await _context.Researches
+        //            .Include(r => r.SubmittedBy)
+        //            .Include(r => r.Authors)
+        //            .ToListAsync();
 
-                var allUsers = await _context.Users
-                    .Where(u => u.IsActive && !u.IsDeleted)
-                    .OrderByDescending(u => u.CreatedAt)
-                    .ToListAsync();
+        //        var allUsers = await _context.Users
+        //            .Where(u => u.IsActive && !u.IsDeleted)
+        //            .OrderByDescending(u => u.CreatedAt)
+        //            .ToListAsync();
 
-                var allReviews = await _context.Reviews
-                    .Where(r => r.IsCompleted)
-                    .ToListAsync();
+        //        var allReviews = await _context.Reviews
+        //            .Where(r => r.IsCompleted)
+        //            .ToListAsync();
 
-                var trackStatistics = allResearches
-                    .GroupBy(r => r.Track)
-                    .Select(g => new TrackStatistic
-                    {
-                        TrackName = GetTrackDisplayName(g.Key),
-                        ResearchCount = g.Count(),
-                        AcceptedCount = g.Count(r => r.Status == ResearchStatus.Accepted),
-                        RejectedCount = g.Count(r => r.Status == ResearchStatus.Rejected),
-                        PendingCount = g.Count(r => r.Status == ResearchStatus.UnderReview ||
-                                              r.Status == ResearchStatus.UnderEvaluation)
-                    })
-                    .OrderByDescending(x => x.ResearchCount)
-                    .ToList();
+        //        var trackStatistics = allResearches
+        //            .GroupBy(r => r.Track)
+        //            .Select(g => new TrackStatistic
+        //            {
+        //                TrackName = GetTrackDisplayName(g.Key),
+        //                ResearchCount = g.Count(),
+        //                AcceptedCount = g.Count(r => r.Status == ResearchStatus.Accepted),
+        //                RejectedCount = g.Count(r => r.Status == ResearchStatus.Rejected),
+        //                PendingCount = g.Count(r => r.Status == ResearchStatus.UnderReview ||
+        //                                      r.Status == ResearchStatus.UnderEvaluation)
+        //            })
+        //            .OrderByDescending(x => x.ResearchCount)
+        //            .ToList();
 
-                var averageReviewTime = allReviews.Any() ?
-                    allReviews.Where(r => r.CompletedDate.HasValue)
-                             .Average(r => (r.CompletedDate!.Value - r.AssignedDate).TotalDays) : 0;
+        //        var averageReviewTime = allReviews.Any() ?
+        //            allReviews.Where(r => r.CompletedDate.HasValue)
+        //                     .Average(r => (r.CompletedDate!.Value - r.AssignedDate).TotalDays) : 0;
 
-                var viewModel = new ConferenceManagerDashboardViewModel
-                {
-                    TotalResearches = allResearches.Count,
-                    AcceptedResearches = allResearches.Count(r => r.Status == ResearchStatus.Accepted),
-                    PendingResearches = allResearches.Count(r => r.Status == ResearchStatus.UnderReview ||
-                                                                r.Status == ResearchStatus.UnderEvaluation ||
-                                                                r.Status == ResearchStatus.AssignedForReview),
-                    RejectedResearches = allResearches.Count(r => r.Status == ResearchStatus.Rejected),
-                    SubmittedResearches = allResearches.Count(r => r.Status == ResearchStatus.Submitted),
-                    TotalUsers = allUsers.Count,
-                    TotalReviewers = allUsers.Count(u => u.Role == UserRole.Reviewer),
-                    CompletedReviews = allReviews.Count,
-                    AverageReviewTime = Math.Round(averageReviewTime, 1),
-                    RecentSubmissions = allResearches.OrderByDescending(r => r.SubmissionDate).Take(10).ToList(),
-                    RecentUsers = allUsers.Take(5).ToList(),
-                    TrackStatistics = trackStatistics
-                };
+        //        var viewModel = new ConferenceManagerDashboardViewModel
+        //        {
+        //            TotalResearches = allResearches.Count,
+        //            AcceptedResearches = allResearches.Count(r => r.Status == ResearchStatus.Accepted),
+        //            PendingResearches = allResearches.Count(r => r.Status == ResearchStatus.UnderReview ||
+        //                                                        r.Status == ResearchStatus.UnderEvaluation ||
+        //                                                        r.Status == ResearchStatus.AssignedForReview),
+        //            RejectedResearches = allResearches.Count(r => r.Status == ResearchStatus.Rejected),
+        //            SubmittedResearches = allResearches.Count(r => r.Status == ResearchStatus.Submitted),
+        //            TotalUsers = allUsers.Count,
+        //            TotalReviewers = allUsers.Count(u => u.Role == UserRole.Reviewer),
+        //            CompletedReviews = allReviews.Count,
+        //            AverageReviewTime = Math.Round(averageReviewTime, 1),
+        //            RecentSubmissions = allResearches.OrderByDescending(r => r.SubmissionDate).Take(10).ToList(),
+        //            RecentUsers = allUsers.Take(5).ToList(),
+        //            TrackStatistics = trackStatistics
+        //        };
 
-                _logger.LogInformation("Admin dashboard loaded successfully");
-                return View("AdminDashboard", viewModel); // تحديد اسم الـ View صراحة
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading admin dashboard");
-                AddErrorMessage("حدث خطأ في تحميل لوحة تحكم مدير النظام");
-                return View("Error");
-            }
-        }
+        //        _logger.LogInformation("Admin dashboard loaded successfully");
+        //        return View("AdminDashboard", viewModel); // تحديد اسم الـ View صراحة
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error loading admin dashboard");
+        //        AddErrorMessage("حدث خطأ في تحميل لوحة تحكم مدير النظام");
+        //        return View("Error");
+        //    }
+        //}
 
         private async Task<IActionResult> ResearcherDashboard()
         {
@@ -542,5 +542,133 @@ namespace ResearchManagement.Web.Controllers
                 return Json(new { success = false, message = "حدث خطأ في تحديث البيانات" });
             }
         }
+
+
+
+        // إضافة هذه الطرق في DashboardController.cs
+
+        private async Task<IActionResult> AdminDashboard()
+        {
+            try
+            {
+                var allResearches = await _context.Researches
+                    .Include(r => r.SubmittedBy)
+                    .Include(r => r.Authors)
+                    .ToListAsync();
+
+                var allUsers = await _context.Users
+                    .Where(u => u.IsActive && !u.IsDeleted)
+                    .OrderByDescending(u => u.CreatedAt)
+                    .ToListAsync();
+
+                var allReviews = await _context.Reviews
+                    .Where(r => r.IsCompleted)
+                    .ToListAsync();
+
+                // إضافة إحصائيات المسارات المعلقة
+                var pendingTrackAssignments = await _context.Researches
+                    .Where(r => r.Status == ResearchStatus.Submitted &&
+                               r.AssignedTrackManagerId == null &&
+                               !r.IsDeleted)
+                    .CountAsync();
+
+                var urgentPendingAssignments = await _context.Researches
+                    .Where(r => r.Status == ResearchStatus.Submitted &&
+                               r.AssignedTrackManagerId == null &&
+                               !r.IsDeleted &&
+                               EF.Functions.DateDiffDay(r.SubmissionDate, DateTime.UtcNow) > 7)
+                    .CountAsync();
+
+                var trackStatistics = allResearches
+                    .GroupBy(r => r.Track)
+                    .Select(g => new TrackStatistic
+                    {
+                        TrackName = GetTrackDisplayName(g.Key),
+                        ResearchCount = g.Count(),
+                        AcceptedCount = g.Count(r => r.Status == ResearchStatus.Accepted),
+                        RejectedCount = g.Count(r => r.Status == ResearchStatus.Rejected),
+                        PendingCount = g.Count(r => r.Status == ResearchStatus.UnderReview ||
+                                              r.Status == ResearchStatus.UnderEvaluation),
+                        PendingAssignmentCount = g.Count(r => r.Status == ResearchStatus.Submitted &&
+                                                       r.AssignedTrackManagerId == null)
+                    })
+                    .OrderByDescending(x => x.ResearchCount)
+                    .ToList();
+
+                var averageReviewTime = allReviews.Any() ?
+                    allReviews.Where(r => r.CompletedDate.HasValue)
+                             .Average(r => (r.CompletedDate!.Value - r.AssignedDate).TotalDays) : 0;
+
+                var viewModel = new ConferenceManagerDashboardViewModel
+                {
+                    TotalResearches = allResearches.Count,
+                    AcceptedResearches = allResearches.Count(r => r.Status == ResearchStatus.Accepted),
+                    PendingResearches = allResearches.Count(r => r.Status == ResearchStatus.UnderReview ||
+                                                                r.Status == ResearchStatus.UnderEvaluation ||
+                                                                r.Status == ResearchStatus.AssignedForReview),
+                    RejectedResearches = allResearches.Count(r => r.Status == ResearchStatus.Rejected),
+                    SubmittedResearches = allResearches.Count(r => r.Status == ResearchStatus.Submitted),
+
+                    // إضافة الإحصائيات الجديدة
+                    PendingTrackAssignments = pendingTrackAssignments,
+                    UrgentPendingAssignments = urgentPendingAssignments,
+
+                    TotalUsers = allUsers.Count,
+                    TotalReviewers = allUsers.Count(u => u.Role == UserRole.Reviewer),
+                    CompletedReviews = allReviews.Count,
+                    AverageReviewTime = Math.Round(averageReviewTime, 1),
+                    RecentSubmissions = allResearches.OrderByDescending(r => r.SubmissionDate).Take(10).ToList(),
+                    RecentUsers = allUsers.Take(5).ToList(),
+                    TrackStatistics = trackStatistics
+                };
+
+                _logger.LogInformation("Admin dashboard loaded successfully");
+                return View("AdminDashboard", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading admin dashboard");
+                AddErrorMessage("حدث خطأ في تحميل لوحة تحكم مدير النظام");
+                return View("Error");
+            }
+        }
+
+        // إضافة هذه الـ Action الجديدة
+        [HttpGet]
+        [Authorize(Roles = "SystemAdmin,ConferenceManager")]
+        public async Task<IActionResult> GetPendingTrackAssignmentsCount()
+        {
+            try
+            {
+                var pendingCount = await _context.Researches
+                    .Where(r => r.Status == ResearchStatus.Submitted &&
+                               r.AssignedTrackManagerId == null &&
+                               !r.IsDeleted)
+                    .CountAsync();
+
+                var urgentCount = await _context.Researches
+                    .Where(r => r.Status == ResearchStatus.Submitted &&
+                               r.AssignedTrackManagerId == null &&
+                               !r.IsDeleted &&
+                               EF.Functions.DateDiffDay(r.SubmissionDate, DateTime.UtcNow) > 7)
+                    .CountAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    pendingCount = pendingCount,
+                    urgentCount = urgentCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting pending track assignments count");
+                return Json(new { success = false, message = "حدث خطأ في جلب الإحصائيات" });
+            }
+        }
+
+
+
+
     }
 }

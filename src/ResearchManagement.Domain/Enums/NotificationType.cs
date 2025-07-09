@@ -9,6 +9,13 @@ namespace ResearchManagement.Domain.Enums
 {
     public enum NotificationType
     {
+        //NewResearchAssigned = 1,
+        //ReviewDeadlineApproaching = 2,
+        //ReviewCompleted = 3,
+        //ResearchStatusChanged = 4,
+        //NewReviewerAssigned = 5,
+        //TrackChanged = 6,
+        //SystemAlert = 7
         [Display(Name = "تأكيد التسجيل")]
         RegistrationConfirmation = 1,
 

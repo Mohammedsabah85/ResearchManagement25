@@ -831,7 +831,7 @@ namespace ResearchManagement.Web.Controllers
         // POST: Research/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Researcher,SystemAdmin")] 
+        [Authorize(Roles = "Researcher,SystemAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -875,7 +875,7 @@ namespace ResearchManagement.Web.Controllers
         }
 
         // GET: Research/DownloadFile/5
-        [Authorize(Roles = "Researcher,SystemAdmin")]
+        [Authorize(Roles = "Reviewer,TrackManager,ConferenceManager,SystemAdmin")]
 
         public async Task<IActionResult> DownloadFile(int fileId)
         {
@@ -887,14 +887,14 @@ namespace ResearchManagement.Web.Controllers
 
                 // Get research file info from database first
                 var research = await _mediator.Send(new GetResearchByIdQuery(fileId, user.Id.ToString()));
-				var fileDto = await _mediator
-	.Send(new GetResearchFileByIdQuery(fileId, user.Id));
+                var fileDto = await _mediator
+    .Send(new GetResearchFileByIdQuery(fileId, user.Id));
 
-				//if (research == null || research.Files?.Any() != true)
-				if (fileDto == null)
+                //if (research == null || research.Files?.Any() != true)
+                if (fileDto == null)
 
-				{
-					TempData["ErrorMessage"] = "الملف غير موجود أو ليس لديك صلاحية للوصول إليه";
+                {
+                    TempData["ErrorMessage"] = "الملف غير موجود أو ليس لديك صلاحية للوصول إليه";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -908,8 +908,8 @@ namespace ResearchManagement.Web.Controllers
                 try
                 {
 
-					var bytes = await _fileService.DownloadFileAsync(fileDto.FilePath);
-					return File(bytes, fileDto.ContentType, fileDto.OriginalFileName);
+                    var bytes = await _fileService.DownloadFileAsync(fileDto.FilePath);
+                    return File(bytes, fileDto.ContentType, fileDto.OriginalFileName);
 
 
                     //var fileBytes = await _fileService.DownloadFileAsync(file.FilePath);
@@ -1130,6 +1130,238 @@ namespace ResearchManagement.Web.Controllers
                 }).ToList();
         }
 
+
+
+        // إضافة هذه الـ Actions في ResearchController.cs
+
+        // POST: Research/AssignToTrack
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "SystemAdmin,ConferenceManager")]
+        public async Task<IActionResult> AssignToTrack(int researchId, ResearchTrack newTrack, string? notes)
+        {
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                if (user == null)
+                    return Json(new { success = false, message = "المستخدم غير مصرح له" });
+
+                // جلب البحث
+                var research = await _mediator.Send(new GetResearchByIdQuery(researchId, user.Id));
+                if (research == null)
+                {
+                    return Json(new { success = false, message = "البحث غير موجود" });
+                }
+
+                // تحديث المسار
+                var command = new AssignResearchToTrackCommand
+                {
+                    ResearchId = researchId,
+                    NewTrack = newTrack,
+                    Notes = notes,
+                    UserId = user.Id
+                };
+
+                var result = await _mediator.Send(command);
+
+                if (result)
+                {
+                    // تسجيل التغيير في تاريخ الحالات
+                    await LogTrackAssignment(researchId, research.Track, newTrack, user.Id, notes);
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "تم تحديد المسار بنجاح وإرسال البحث لمدير المسار"
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "فشل في تحديد المسار" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطأ في تحديد المسار للبحث {ResearchId}", researchId);
+                return Json(new { success = false, message = "حدث خطأ أثناء تحديد المسار" });
+            }
+        }
+
+        // GET: Research/PendingTrackAssignment
+        [HttpGet]
+        [Authorize(Roles = "SystemAdmin,ConferenceManager")]
+        public async Task<IActionResult> PendingTrackAssignment()
+        {
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                if (user == null)
+                    return RedirectToAction("Login", "Account");
+
+                // جلب البحوث التي تحتاج لتحديد المسار
+                var pendingResearches = await _context.Researches
+                    .Include(r => r.SubmittedBy)
+                    .Include(r => r.Authors)
+                    .Where(r => r.Status == ResearchStatus.Submitted &&
+                               !r.IsDeleted &&
+                               r.AssignedTrackManagerId == null) // لم يتم تعيين مدير مسار بعد
+                    .OrderBy(r => r.SubmissionDate)
+                    .ToListAsync();
+
+                var viewModel = new PendingTrackAssignmentViewModel
+                {
+                    PendingResearches = pendingResearches.Select(r => new ResearchTrackAssignmentDto
+                    {
+                        Id = r.Id,
+                        Title = r.Title,
+                        TitleEn = r.TitleEn,
+                        AbstractAr = r.AbstractAr,
+                        SubmittedByName = $"{r.SubmittedBy.FirstName} {r.SubmittedBy.LastName}",
+                        SubmissionDate = r.SubmissionDate,
+                        CurrentTrack = r.Track,
+                         //SuggestedTrack = DetermineSuggestedTrack(r), 
+                        Authors = r.Authors?.Select(a => new ResearchAuthorDto
+                        {
+                            FirstName = a.FirstName,
+                            LastName = a.LastName,
+                            Email = a.Email,
+                            Institution = a.Institution
+                        }).ToList() ?? new List<ResearchAuthorDto>()
+                    }).ToList()
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطأ في تحميل البحوث المعلقة لتحديد المسار");
+                AddErrorMessage("حدث خطأ في تحميل البحوث المعلقة");
+                return RedirectToAction("Index");
+            }
+        }
+
+        // Helper method لتحديد المسار المقترح
+////        private ResearchTrack DetermineSuggestedTrack(Research research)
+////        {
+////            يمكن تطوير خوارزمية أكثر تعقيداً هنا
+////            var keywords = (research.Keywords + " " + research.KeywordsEn).ToLower();
+////            var abstract = (research.AbstractAr + " " + research.AbstractEn).ToLower();
+////        var title = (research.Title + " " + research.TitleEn).ToLower();
+
+////        var content = (keywords + " " + abstract + " " + title);
+
+////     خوارزمية بسيطة للتحديد التلقائي
+////    if (content.Contains("energy") || content.Contains("renewable") || content.Contains("طاقة"))
+////        return ResearchTrack.EnergyAndRenewableEnergy;
+    
+////    if (content.Contains("electrical") || content.Contains("electronic") || content.Contains("كهربائي"))
+////        return ResearchTrack.ElectricalAndElectronicsEngineering;
+    
+////    if (content.Contains("material") || content.Contains("mechanical") || content.Contains("مواد") || content.Contains("ميكانيكي"))
+////        return ResearchTrack.MaterialScienceAndMechanicalEngineering;
+    
+////    if (content.Contains("computer") || content.Contains("communication") || content.Contains("حاسوب") || content.Contains("اتصالات"))
+////        return ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering;
+    
+////    if (content.Contains("avionics") || content.Contains("aircraft") || content.Contains("طيران"))
+////        return ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering;
+    
+////    if (content.Contains("petroleum") || content.Contains("gas") || content.Contains("بترول") || content.Contains("غاز"))
+////        return ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment;
+
+////     العودة للمسار الأصلي إذا لم يتم العثور على تطابق
+////    return research.Track;
+////}
+
+
+// Helper method لتسجيل تغيير المسار
+private async Task LogTrackAssignment(int researchId, ResearchTrack oldTrack, ResearchTrack newTrack, string userId, string? notes)
+        {
+            try
+            {
+                var trackHistory = new ResearchTrackHistory
+                {
+                    ResearchId = researchId,
+                    FromTrack = oldTrack,
+                    ToTrack = newTrack,
+                    ChangedAt = DateTime.UtcNow,
+                    ChangedBy = userId,
+                    Notes = notes,
+                    IsActive = true
+                };
+
+                _context.ResearchTrackHistories.Add(trackHistory);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطأ في تسجيل تاريخ تغيير المسار");
+            }
+        }
+
+
+        // POST: Research/BulkAssignTracks
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "SystemAdmin,ConferenceManager")]
+        public async Task<IActionResult> BulkAssignTracks(List<BulkTrackAssignmentDto> assignments)
+        {
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                if (user == null)
+                    return Json(new { success = false, message = "المستخدم غير مصرح له" });
+
+                var successCount = 0;
+                var errorCount = 0;
+                var errors = new List<string>();
+
+                foreach (var assignment in assignments)
+                {
+                    try
+                    {
+                        var command = new AssignResearchToTrackCommand
+                        {
+                            ResearchId = assignment.ResearchId,
+                            NewTrack = assignment.Track,
+                            Notes = assignment.Notes,
+                            UserId = user.Id
+                        };
+
+                        var result = await _mediator.Send(command);
+                        if (result)
+                        {
+                            successCount++;
+                        }
+                        else
+                        {
+                            errorCount++;
+                            errors.Add($"فشل في تحديد المسار للبحث رقم {assignment.ResearchId}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        errors.Add($"خطأ في البحث رقم {assignment.ResearchId}: {ex.Message}");
+                        _logger.LogError(ex, "خطأ في تحديد المسار للبحث {ResearchId}", assignment.ResearchId);
+                    }
+                }
+
+                return Json(new
+                {
+                    success = errorCount == 0,
+                    successCount = successCount,
+                    errorCount = errorCount,
+                    errors = errors,
+                    message = $"تم تحديد المسار لـ {successCount} بحث بنجاح" + (errorCount > 0 ? $" مع {errorCount} أخطاء" : "")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطأ في التحديد المجمع للمسارات");
+                return Json(new { success = false, message = "حدث خطأ في التحديد المجمع للمسارات" });
+            }
+        }
         //private List<SelectListItem> GetTrackOptions()
         //{
         //    return Enum.GetValues<ResearchTrack>()
@@ -1258,478 +1490,7 @@ namespace ResearchManagement.Web.Controllers
 
         #endregion
     }
-
-    // Additional Commands that might be needed
-//    public class UpdateResearchCommand : IRequest<bool>
-//    {
-//        public int ResearchId { get; set; }
-//        public CreateResearchDto Research { get; set; } = new();
-//        public string UserId { get; set; } = string.Empty;
-//    }
-
-//    public class DeleteResearchCommand : IRequest<bool>
-//    {
-//        public int ResearchId { get; set; }
-//        public string UserId { get; set; } = string.Empty;
-//    }
 }
 
 
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.AspNetCore.Identity;
-//using Microsoft.AspNetCore.Authorization;
-//using MediatR;
-//using ResearchManagement.Domain.Entities;
-//using ResearchManagement.Domain.Enums;
-//using ResearchManagement.Application.DTOs;
-//using ResearchManagement.Application.Commands.Research;
-//using ResearchManagement.Application.Interfaces;
-//using Microsoft.EntityFrameworkCore;
-//using ResearchManagement.Infrastructure.Data;
-//using ResearchManagement.Web.Models.ViewModels.Research;
 
-//namespace ResearchManagement.Web.Controllers
-//{
-//    [Authorize]
-//    public class ResearchController : BaseController
-//    {
-//        private readonly IMediator _mediator;
-//        private readonly IResearchRepository _researchRepository;
-//        private readonly IFileService _fileService;
-//        private readonly ILogger<ResearchController> _logger;
-//        private readonly ApplicationDbContext _context;
-//        public ResearchController(
-//            UserManager<User> userManager,
-//            IMediator mediator,
-//            IResearchRepository researchRepository,
-//            IFileService fileService,
-//            ApplicationDbContext context,
-//            ILogger<ResearchController> logger) : base(userManager)
-//        {
-//            _mediator = mediator;
-//            _researchRepository = researchRepository;
-//            _fileService = fileService;
-//            _context = context;
-//            _logger = logger;
-//        }
-
-//        public async Task<IActionResult> Index()
-//        {
-//            var user = await GetCurrentUserAsync();
-//            if (user == null)
-//                return RedirectToAction("Login", "Account");
-
-//            IEnumerable<Research> researches;
-
-//            switch (user.Role)
-//            {
-//                case UserRole.Researcher:
-//                    researches = await _researchRepository.GetByUserIdAsync(user.Id);
-//                    break;
-//                case UserRole.ConferenceManager:
-//                    researches = await _researchRepository.GetAllAsync();
-//                    break;
-//                default:
-//                    researches = new List<Research>();
-//                    break;
-//            }
-
-//            return View(researches);
-//        }
-
-//        [HttpGet]
-//        public async Task<IActionResult> Details(int id)
-//        {
-//            var research = await _researchRepository.GetByIdWithDetailsAsync(id);
-//            if (research == null)
-//                return NotFound();
-
-//            var user = await GetCurrentUserAsync();
-//            if (user == null)
-//                return RedirectToAction("Login", "Account");
-
-//            // التحقق من الصلاحيات
-//            if (user.Role == UserRole.Researcher && research.SubmittedById != user.Id)
-//                return Forbid();
-
-//            // تحويل إلى ViewModel
-//            var researchDto = new ResearchDto
-//            {
-//                Id = research.Id,
-//                Title = research.Title,
-//                TitleEn = research.TitleEn,
-//                AbstractAr = research.AbstractAr,
-//                AbstractEn = research.AbstractEn,
-//                Keywords = research.Keywords,
-//                KeywordsEn = research.KeywordsEn,
-//                ResearchType = research.ResearchType,
-//                Language = research.Language,
-//                Track = research.Track,
-//                Methodology = research.Methodology,
-//                Status = research.Status,
-//                SubmissionDate = research.SubmissionDate,
-//                DecisionDate = research.DecisionDate,
-//                RejectionReason = research.RejectionReason,
-//                ReviewDeadline = research.ReviewDeadline,
-//                SubmittedByName = research.SubmittedBy != null ? $"{research.SubmittedBy.FirstName} {research.SubmittedBy.LastName}" : "غير محدد",
-//                AssignedTrackManagerName = research.AssignedTrackManager?.User != null ? $"{research.AssignedTrackManager.User.FirstName} {research.AssignedTrackManager.User.LastName}" : null,
-//                Authors = research.Authors?.Select(a => new ResearchAuthorDto
-//                {
-//                    FirstName = a.FirstName,
-//                    LastName = a.LastName,
-//                    FirstNameEn = a.FirstNameEn,
-//                    LastNameEn = a.LastNameEn,
-//                    Email = a.Email,
-//                    Institution = a.Institution,
-//                    AcademicDegree = a.AcademicDegree,
-//                    OrcidId = a.OrcidId,
-//                    Order = a.Order,
-//                    IsCorresponding = a.IsCorresponding
-//                }).ToList() ?? new List<ResearchAuthorDto>()
-//            };
-
-//            var model = new ResearchDetailsViewModel
-//            {
-//                Research = researchDto,
-//                CurrentUserId = user.Id,
-//                CurrentUserRole = user.Role,
-//                IsAuthor = research.SubmittedById == user.Id,
-//                CanEdit = user.Role == UserRole.Researcher && research.SubmittedById == user.Id,
-//                CanDelete = user.Role == UserRole.Researcher && research.SubmittedById == user.Id,
-//                CanDownloadFiles = true
-//            };
-
-//            return View(model);
-//        }
-
-//        [HttpGet]
-//        [Authorize(Roles = "Researcher")]
-//        public IActionResult Create()
-//        {
-//            //var model = new CreateResearchDto();
-//            var model = new CreateResearchViewModel();
-//            return View(model);
-//        }
-
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        [Authorize(Roles = "Researcher")]
-//        //public async Task<IActionResult> Create(CreateResearchDto model, IFormFile? researchFile)
-//        public async Task<IActionResult> Create(CreateResearchViewModel viewModel, IFormFile? researchFile)
-
-//        {
-//            if (!ModelState.IsValid)
-//            {
-//                // إضافة معلومات debug
-//                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-//                {
-//                    _logger.LogWarning("Validation error: {Error}", error.ErrorMessage);
-//                }
-//                //return View(model);
-//                return View(viewModel);
-//            }
-
-//            try
-//            {
-//                //_logger.LogInformation("Creating research for user {UserId}: {Title}", GetCurrentUserId(), model.Title);
-//                _logger.LogInformation("Creating research for user {UserId}: {Title}", GetCurrentUserId(), viewModel.Title);
-
-//                // تحويل ViewModel إلى DTO
-//                var researchDto = new CreateResearchDto
-//                {
-//                    Title = viewModel.Title,
-//                    TitleEn = viewModel.TitleEn,
-//                    AbstractAr = viewModel.AbstractAr,
-//                    AbstractEn = viewModel.AbstractEn,
-//                    Keywords = viewModel.Keywords,
-//                    KeywordsEn = viewModel.KeywordsEn,
-//                    ResearchType = viewModel.ResearchType,
-//                    Language = viewModel.Language,
-//                    Track = viewModel.Track,
-//                    Methodology = viewModel.Methodology
-//                };
-//                var command = new CreateResearchCommand
-//                {
-//                    Research = researchDto,
-//                    UserId = GetCurrentUserId()
-//                };
-
-//                var researchId = await _mediator.Send(command);
-
-//                _logger.LogInformation("Research created successfully with ID {ResearchId}", researchId);
-
-//                // رفع الملف إذا تم تحديده
-//                if (researchFile != null && researchFile.Length > 0)
-//                {
-//                    try
-//                    {
-//                        await UploadResearchFile(researchId, researchFile, FileType.OriginalResearch);
-//                        _logger.LogInformation("File uploaded successfully for research {ResearchId}", researchId);
-//                    }
-//                    catch (Exception fileEx)
-//                    {
-//                        _logger.LogError(fileEx, "Failed to upload file for research {ResearchId}", researchId);
-//                        AddWarningMessage("تم حفظ البحث بنجاح لكن فشل في رفع الملف");
-//                    }
-//                }
-
-//                AddSuccessMessage("تم تقديم البحث بنجاح");
-//                return RedirectToAction("Details", new { id = researchId });
-//            }
-//            catch (Exception ex)
-//            {
-//                _logger.LogError(ex, "Error creating research for user {UserId}", GetCurrentUserId());
-//                AddErrorMessage($"حدث خطأ في تقديم البحث: {ex.Message}");
-//                return View(viewModel);
-//            }
-//        }
-
-//        [HttpGet]
-//        [Authorize(Roles = "Researcher")]
-//        public async Task<IActionResult> Edit(int id)
-//        {
-//            var research = await _researchRepository.GetByIdWithDetailsAsync(id);
-//            if (research == null)
-//                return NotFound();
-
-//            // التحقق من الملكية
-//            if (research.SubmittedById != GetCurrentUserId())
-//                return Forbid();
-
-//            // التحقق من إمكانية التعديل
-//            if (research.Status != ResearchStatus.Submitted &&
-//                research.Status != ResearchStatus.RequiresMinorRevisions &&
-//                research.Status != ResearchStatus.RequiresMajorRevisions)
-//            {
-//                AddWarningMessage("لا يمكن تعديل البحث في الحالة الحالية");
-//                return RedirectToAction("Details", new { id });
-//            }
-
-//            var model = new UpdateResearchDto
-//            {
-//                Id = research.Id,
-//                Title = research.Title,
-//                TitleEn = research.TitleEn,
-//                AbstractAr = research.AbstractAr,
-//                AbstractEn = research.AbstractEn,
-//                Keywords = research.Keywords,
-//                KeywordsEn = research.KeywordsEn,
-//                ResearchType = research.ResearchType,
-//                Language = research.Language,
-//                Track = research.Track,
-//                Methodology = research.Methodology,
-//                Authors = research.Authors.Select(a => new UpdateResearchAuthorDto
-//                {
-//                    Id = a.Id,
-//                    FirstName = a.FirstName,
-//                    LastName = a.LastName,
-//                    FirstNameEn = a.FirstNameEn,
-//                    LastNameEn = a.LastNameEn,
-//                    Email = a.Email,
-//                    Institution = a.Institution,
-//                    AcademicDegree = a.AcademicDegree,
-//                    OrcidId = a.OrcidId,
-//                    Order = a.Order,
-//                    IsCorresponding = a.IsCorresponding
-//                }).ToList()
-//            };
-
-//            return View(model);
-//        }
-
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        [Authorize(Roles = "Researcher")]
-//        public async Task<IActionResult> Edit(UpdateResearchDto model, IFormFile? newResearchFile)
-//        {
-//            if (!ModelState.IsValid)
-//                return View(model);
-
-//            try
-//            {
-//                var research = await _researchRepository.GetByIdAsync(model.Id);
-//                if (research == null)
-//                    return NotFound();
-
-//                // التحقق من الملكية
-//                if (research.SubmittedById != GetCurrentUserId())
-//                    return Forbid();
-
-//                // تحديث البيانات
-//                research.Title = model.Title;
-//                research.TitleEn = model.TitleEn;
-//                research.AbstractAr = model.AbstractAr;
-//                research.AbstractEn = model.AbstractEn;
-//                research.Keywords = model.Keywords;
-//                research.KeywordsEn = model.KeywordsEn;
-//                research.ResearchType = model.ResearchType;
-//                research.Language = model.Language;
-//                research.Track = model.Track;
-//                research.Methodology = model.Methodology;
-//                research.UpdatedAt = DateTime.UtcNow;
-//                research.UpdatedBy = GetCurrentUserId();
-
-//                // تحديث الحالة إذا كان البحث يتطلب تعديلات
-//                if (research.Status == ResearchStatus.RequiresMinorRevisions ||
-//                    research.Status == ResearchStatus.RequiresMajorRevisions)
-//                {
-//                    research.Status = ResearchStatus.RevisionsSubmitted;
-//                }
-
-//                await _researchRepository.UpdateAsync(research);
-
-//                // رفع ملف جديد إذا تم تحديده
-//                if (newResearchFile != null && newResearchFile.Length > 0)
-//                {
-//                    await UploadResearchFile(model.Id, newResearchFile, FileType.RevisedVersion);
-//                }
-
-//                AddSuccessMessage("تم تحديث البحث بنجاح");
-//                return RedirectToAction("Details", new { id = model.Id });
-//            }
-//            catch (Exception ex)
-//            {
-//                AddErrorMessage($"حدث خطأ في تحديث البحث: {ex.Message}");
-//                return View(model);
-//            }
-//        }
-
-//        [HttpGet]
-//        public async Task<IActionResult> DownloadFile(int fileId)
-//        {
-//            try
-//            {
-//                // البحث عن الملف في قاعدة البيانات
-//                var researchFile = await _context.ResearchFiles
-//                    .Include(f => f.Research)
-//                    .FirstOrDefaultAsync(f => f.Id == fileId && f.IsActive);
-
-//                if (researchFile == null)
-//                {
-//                    AddErrorMessage("الملف غير موجود");
-//                    return NotFound();
-//                }
-
-//                // التحقق من صلاحيات الوصول
-//                var currentUser = await GetCurrentUserAsync();
-//                if (currentUser == null)
-//                {
-//                    return RedirectToAction("Login", "Account");
-//                }
-
-//                // التحقق من الصلاحيات حسب دور المستخدم
-//                bool hasAccess = false;
-
-//                if (currentUser.Role == UserRole.SystemAdmin ||
-//                    currentUser.Role == UserRole.ConferenceManager)
-//                {
-//                    hasAccess = true; // المدراء لهم صلاحية كاملة
-//                }
-//                else if (currentUser.Role == UserRole.Researcher &&
-//                         researchFile.Research.SubmittedById == currentUser.Id)
-//                {
-//                    hasAccess = true; // الباحث يمكنه تحميل ملفات بحوثه
-//                }
-//                else if (currentUser.Role == UserRole.Reviewer)
-//                {
-//                    // المراجع يمكنه تحميل ملفات البحوث المكلف بمراجعتها
-//                    var hasReviewAccess = await _context.Reviews
-//                        .AnyAsync(r => r.ResearchId == researchFile.ResearchId &&
-//                                      r.ReviewerId == currentUser.Id);
-//                    hasAccess = hasReviewAccess;
-//                }
-//                else if (currentUser.Role == UserRole.TrackManager)
-//                {
-//                    // مدير التراك يمكنه تحميل ملفات بحوث تخصصه
-//                    var trackManager = await _context.TrackManagers
-//                        .FirstOrDefaultAsync(tm => tm.UserId == currentUser.Id &&
-//                                                  tm.Track == researchFile.Research.Track);
-//                    hasAccess = trackManager != null;
-//                }
-
-//                if (!hasAccess)
-//                {
-//                    AddErrorMessage("ليس لديك صلاحية لتحميل هذا الملف");
-//                    return Forbid();
-//                }
-
-//                // تحميل محتوى الملف
-//                var fileContent = await _fileService.DownloadFileAsync(researchFile.FilePath);
-
-//                // إرجاع الملف للتحميل
-//                return File(fileContent, researchFile.ContentType, researchFile.OriginalFileName);
-//            }
-//            catch (FileNotFoundException)
-//            {
-//                AddErrorMessage("الملف غير موجود على الخادم");
-//                return NotFound();
-//            }
-//            catch (Exception ex)
-//            {
-//                // تسجيل الخطأ
-//                _logger?.LogError(ex, "Error downloading file {FileId}", fileId);
-//                AddErrorMessage("حدث خطأ أثناء تحميل الملف");
-//                return RedirectToAction("Index");
-//            }
-//        }
-
-//        private async Task UploadResearchFile(int researchId, IFormFile file, FileType fileType)
-//        {
-//            try
-//            {
-//                // التحقق من صحة الملف
-//                if (file == null || file.Length == 0)
-//                {
-//                    throw new ArgumentException("لم يتم تحديد ملف صالح");
-//                }
-
-//                // التحقق من نوع الملف
-//                var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-//                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-//                if (!allowedExtensions.Contains(fileExtension))
-//                {
-//                    throw new ArgumentException($"نوع الملف غير مدعوم. الأنواع المدعومة: {string.Join(", ", allowedExtensions)}");
-//                }
-
-//                // التحقق من حجم الملف (50 ميجابايت)
-//                if (file.Length > 50 * 1024 * 1024)
-//                {
-//                    throw new ArgumentException("حجم الملف كبير جداً. الحد الأقصى 50 ميجابايت");
-//                }
-
-//                // تحويل الملف إلى byte array
-//                using var stream = new MemoryStream();
-//                await file.CopyToAsync(stream);
-//                var fileContent = stream.ToArray();
-
-//                // رفع الملف باستخدام FileService
-//                var filePath = await _fileService.UploadFileAsync(fileContent, file.FileName, file.ContentType);
-
-//                // حفظ معلومات الملف في قاعدة البيانات
-//                var researchFile = new ResearchFile
-//                {
-//                    ResearchId = researchId,
-//                    FileName = Path.GetFileName(filePath),
-//                    OriginalFileName = file.FileName,
-//                    FilePath = filePath,
-//                    ContentType = file.ContentType,
-//                    FileSize = file.Length,
-//                    FileType = fileType,
-//                    Version = 1,
-//                    IsActive = true,
-//                    CreatedAt = DateTime.UtcNow,
-//                    CreatedBy = GetCurrentUserId()
-//                };
-
-//                _context.ResearchFiles.Add(researchFile);
-//                await _context.SaveChangesAsync();
-//            }
-//            catch (Exception ex)
-//            {
-//                _logger?.LogError(ex, "Error uploading file for research {ResearchId}", researchId);
-//                throw; // إعادة إرسال الخطأ للتعامل معه في المستوى الأعلى
-//            }
-//        }
-//    }
-//}

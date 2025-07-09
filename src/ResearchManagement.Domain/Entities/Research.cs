@@ -12,14 +12,14 @@ namespace ResearchManagement.Domain.Entities
     {
         [Required]
         [StringLength(500)]
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; } = string.Empty;
 
         [StringLength(500)]
         public string? TitleEn { get; set; }
 
         [Required]
         [StringLength(2000)]
-        public string AbstractAr { get; set; } = string.Empty;
+        public string? AbstractAr { get; set; } = string.Empty;
 
         [StringLength(2000)]
         public string? AbstractEn { get; set; }
