@@ -19,7 +19,7 @@ namespace ResearchManagement.Application.DTOs
         public ResearchType ResearchType { get; set; }
         public ResearchLanguage Language { get; set; }
         public ResearchStatus Status { get; set; }
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
         public string? Methodology { get; set; }
         public DateTime SubmissionDate { get; set; }
         public DateTime? ReviewDeadline { get; set; }
@@ -72,7 +72,7 @@ namespace ResearchManagement.Application.DTOs
         public string? KeywordsEn { get; set; }
         public ResearchType ResearchType { get; set; }
         public ResearchLanguage Language { get; set; }
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
         public string? Methodology { get; set; }
         public List<CreateResearchAuthorDto> Authors { get; set; } = new();
         public List<ResearchFileDto> Files { get; set; } = new();
@@ -89,7 +89,7 @@ namespace ResearchManagement.Application.DTOs
         public string? KeywordsEn { get; set; }
         public ResearchType ResearchType { get; set; }
         public ResearchLanguage Language { get; set; }
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
         public string? Methodology { get; set; }
         public List<UpdateResearchAuthorDto> Authors { get; set; } = new();
         public List<ResearchFileDto> Files { get; set; } = new();

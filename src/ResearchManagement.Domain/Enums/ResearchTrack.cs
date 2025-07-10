@@ -9,6 +9,8 @@ namespace ResearchManagement.Domain.Enums
 {
     public enum ResearchTrack
     {
+        [Display(Name = "غير محدد")]
+        NotAssigned = 0,
         [Display(Name = "Energy and Renewable Energy")]
         EnergyAndRenewableEnergy = 1,
 

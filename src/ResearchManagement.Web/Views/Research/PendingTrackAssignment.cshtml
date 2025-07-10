@@ -1,4 +1,5 @@
-﻿@* Views/Research/PendingTrackAssignment.cshtml *@
+﻿@using ResearchManagement.Domain.Enums
+@* Views/Research/PendingTrackAssignment.cshtml *@
 @model ResearchManagement.Web.Models.ViewModels.Research.PendingTrackAssignmentViewModel
 @{
     ViewData["Title"] = "تحديد المسارات المعلقة";
@@ -279,13 +280,13 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-primary"
-                                                    onclick="showTrackAssignmentModal(@research.Id, '@research.Title', @((int)research.CurrentTrack), @((int)research.SuggestedTrack))"
-                                                    title="تحديد المسار">
+                                            onclick="showTrackAssignmentModal(@research.Id, '@research.Title', @((int)research.CurrentTrack), @((int)research.SuggestedTrack))"
+                                            title="تحديد المسار">
                                                 <i class="fas fa-route"></i>
                                             </button>
                                             <button type="button" class="btn btn-outline-info"
-                                                    onclick="showResearchPreview(@research.Id)"
-                                                    title="معاينة البحث">
+                                            onclick="showResearchPreview(@research.Id)"
+                                            title="معاينة البحث">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </div>
@@ -358,7 +359,7 @@
                     <div class="mb-3">
                         <label for="modalNotes" class="form-label">ملاحظات</label>
                         <textarea id="modalNotes" class="form-control" rows="3"
-                                  placeholder="أضف ملاحظات حول سبب تحديد هذا المسار..."></textarea>
+                        placeholder="أضف ملاحظات حول سبب تحديد هذا المسار..."></textarea>
                     </div>
 
                     <div class="alert alert-info">
@@ -400,284 +401,287 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Select all functionality
-            $('#selectAll, #selectAllHeader').change(function() {
-                var isChecked = $(this).is(':checked');
-                $('.research-checkbox').prop('checked', isChecked);
-                updateSelectedCount();
-                toggleBulkActions();
-            });
+        // Select all functionality
+        $('#selectAll, #selectAllHeader').change(function() {
+        var isChecked = $(this).is(':checked');
+        $('.research-checkbox').prop('checked', isChecked);
+        updateSelectedCount();
+        toggleBulkActions();
+        });
 
-            // Individual checkbox change
-            $('.research-checkbox').change(function() {
-                updateSelectedCount();
-                toggleBulkActions();
+        // Individual checkbox change
+        $('.research-checkbox').change(function() {
+        updateSelectedCount();
+        toggleBulkActions();
 
-                // Update "select all" checkbox
-                var totalCheckboxes = $('.research-checkbox').length;
-                var checkedCheckboxes = $('.research-checkbox:checked').length;
-                $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
-            });
+        // Update "select all" checkbox
+        var totalCheckboxes = $('.research-checkbox').length;
+        var checkedCheckboxes = $('.research-checkbox:checked').length;
+        $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
+        });
 
-            // Auto suggest functionality
-            $('#autoSuggestBtn').click(function() {
-                if (confirm('هل تريد تطبيق الاقتراحات التلقائية لجميع البحوث؟')) {
-                    applyAutoSuggestions();
-                }
-            });
+        // Auto suggest functionality
+        $('#autoSuggestBtn').click(function() {
+        if (confirm('هل تريد تطبيق الاقتراحات التلقائية لجميع البحوث؟')) {
+        applyAutoSuggestions();
+        }
+        });
 
-            // Bulk assign functionality
-            $('#bulkAssignForm').submit(function(e) {
-                e.preventDefault();
-                performBulkAssignment();
-            });
+        // Bulk assign functionality
+        $('#bulkAssignForm').submit(function(e) {
+        e.preventDefault();
+        performBulkAssignment();
+        });
         });
 
         function updateSelectedCount() {
-            var count = $('.research-checkbox:checked').length;
-            $('#selectedCount').text(count);
+        var count = $('.research-checkbox:checked').length;
+        $('#selectedCount').text(count);
         }
 
         function toggleBulkActions() {
-            var hasSelected = $('.research-checkbox:checked').length > 0;
-            $('#bulkAssignBtn').prop('disabled', !hasSelected);
-            $('#bulkActionsPanel').toggle(hasSelected);
+        var hasSelected = $('.research-checkbox:checked').length > 0;
+        $('#bulkAssignBtn').prop('disabled', !hasSelected);
+        $('#bulkActionsPanel').toggle(hasSelected);
         }
 
         function showTrackAssignmentModal(researchId, title, currentTrack, suggestedTrack) {
-            $('#modalResearchId').val(researchId);
-            $('#modalResearchTitle').text(title);
-            $('#modalCurrentTrack').text(getTrackDisplayName(currentTrack));
-            $('#modalSuggestedTrack').text(getTrackDisplayName(suggestedTrack));
+        $('#modalResearchId').val(researchId);
+        $('#modalResearchTitle').text(title);
+        $('#modalCurrentTrack').text(getTrackDisplayName(currentTrack));
+        $('#modalSuggestedTrack').text(getTrackDisplayName(suggestedTrack));
 
-            // Set suggested track as default
-            $('#modalNewTrack').val(suggestedTrack);
+        // Set suggested track as default
+        $('#modalNewTrack').val(suggestedTrack);
 
-            $('#trackAssignmentModal').modal('show');
+        $('#trackAssignmentModal').modal('show');
         }
 
         function getTrackDisplayName(trackValue) {
-            const tracks = {
-                1: 'Energy and Renewable Energy',
-                2: 'Electromechanical System, and Mechatronics Engineering',
-                3: 'Material Science & Mechanical Engineering',
-                4: 'Navigation & Guidance Systems, Computer and Communication Engineering',
-                5: 'Electrical & Electronics Engineering',
-                6: 'Avionics Systems, Aircraft and Unmanned Aircraft Engineering',
-                7: 'Earth\'s Natural Resources, Gas and Petroleum Systems & Equipment'
-            };
-            return tracks[trackValue] || 'غير محدد';
+        const tracks = {
+        1: 'Energy and Renewable Energy',
+        2: 'Electromechanical System, and Mechatronics Engineering',
+        3: 'Material Science & Mechanical Engineering',
+        4: 'Navigation & Guidance Systems, Computer and Communication Engineering',
+        5: 'Electrical & Electronics Engineering',
+        6: 'Avionics Systems, Aircraft and Unmanned Aircraft Engineering',
+        7: 'Earth\'s Natural Resources, Gas and Petroleum Systems & Equipment'
+        };
+        return tracks[trackValue] || 'غير محدد';
         }
 
         // Use suggested track
         $('#useSuggestedBtn').click(function() {
-            var suggestedTrack = $('#modalSuggestedTrack').text();
-            // Find the value for this track name
-            $('#modalNewTrack option').each(function() {
-                if ($(this).text() === suggestedTrack) {
-                    $('#modalNewTrack').val($(this).val());
-                    return false;
-                }
-            });
+        var suggestedTrack = $('#modalSuggestedTrack').text();
+        // Find the value for this track name
+        $('#modalNewTrack option').each(function() {
+        if ($(this).text() === suggestedTrack) {
+        $('#modalNewTrack').val($(this).val());
+        return false;
+        }
+        });
         });
 
         // Assign track
         $('#assignTrackBtn').click(function() {
-            var researchId = $('#modalResearchId').val();
-            var newTrack = $('#modalNewTrack').val();
-            var notes = $('#modalNotes').val();
+        var researchId = $('#modalResearchId').val();
+        var newTrack = $('#modalNewTrack').val();
+        var notes = $('#modalNotes').val();
 
-            if (!newTrack) {
-                alert('يرجى اختيار المسار الجديد');
-                return;
-            }
+        if (!newTrack) {
+        alert('يرجى اختيار المسار الجديد');
+        return;
+        }
 
-            assignTrack(researchId, newTrack, notes);
+        assignTrack(researchId, newTrack, notes);
         });
 
         function assignTrack(researchId, newTrack, notes) {
-            var btn = $('#assignTrackBtn');
-            var originalText = btn.html();
+        var btn = $('#assignTrackBtn');
+        var originalText = btn.html();
 
-            btn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التحديد...').prop('disabled', true);
+        btn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التحديد...').prop('disabled', true);
 
-            $.ajax({
-                url: '@Url.Action("AssignToTrack", "Research")',
-                type: 'POST',
-                data: {
-                    researchId: researchId,
-                    newTrack: newTrack,
-                    notes: notes,
-                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showToast('success', response.message);
-                        $('#trackAssignmentModal').modal('hide');
+        $.ajax({
+        url: '@Url.Action("AssignToTrack", "Research")',
+        type: 'POST',
+        data: {
+        researchId: researchId,
+        newTrack: newTrack,
+        notes: notes,
+        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function(response) {
+        if (response.success) {
+        showToast('success', response.message);
+        $('#trackAssignmentModal').modal('hide');
 
-                        // Remove the row from the table
-                        $(`tr[data-research-id="${researchId}"]`).fadeOut(300, function() {
-                            $(this).remove();
-                            updateStatistics();
-                        });
-                    } else {
-                        showToast('error', response.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', 'حدث خطأ في الاتصال بالخادم');
-                },
-                complete: function() {
-                    btn.html(originalText).prop('disabled', false);
-                }
-            });
+        // Remove the row from the table
+        $(`tr[data-research-id="${researchId}"]`).fadeOut(300, function() {
+        $(this).remove();
+        updateStatistics();
+        });
+        } else {
+        showToast('error', response.message);
+        }
+        },
+        error: function() {
+        showToast('error', 'حدث خطأ في الاتصال بالخادم');
+        },
+        complete: function() {
+        btn.html(originalText).prop('disabled', false);
+        }
+        });
         }
 
         function performBulkAssignment() {
-            var selectedIds = $('.research-checkbox:checked').map(function() {
-                return $(this).val();
-            }).get();
+        var selectedIds = $('.research-checkbox:checked').map(function() {
+        return $(this).val();
+        }).get();
 
-            if (selectedIds.length === 0) {
-                alert('يرجى اختيار بحوث للتحديد');
-                return;
-            }
+        if (selectedIds.length === 0) {
+        alert('يرجى اختيار بحوث للتحديد');
+        return;
+        }
 
-            var track = $('#bulkTrack').val();
-            var notes = $('#bulkNotes').val();
+        var track = $('#bulkTrack').val();
+        var notes = $('#bulkNotes').val();
 
-            if (!track) {
-                alert('يرجى اختيار المسار');
-                return;
-            }
+        if (!track) {
+        alert('يرجى اختيار المسار');
+        return;
+        }
 
-            if (confirm(`هل تريد تحديد المسار لـ ${selectedIds.length} بحث؟`)) {
-                var assignments = selectedIds.map(id => ({
-                    researchId: parseInt(id),
-                    track: parseInt(track),
-                    notes: notes
-                }));
+        if (confirm(`هل تريد تحديد المسار لـ ${selectedIds.length} بحث؟`)) {
+        var assignments = selectedIds.map(id => ({
+        researchId: parseInt(id),
+        track: parseInt(track),
+        notes: notes
+        }));
 
-                $.ajax({
-                    url: '@Url.Action("BulkAssignTracks", "Research")',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(assignments),
-                    success: function(response) {
-                        if (response.success) {
-                            showToast('success', response.message);
-                            location.reload();
-                        } else {
-                            showToast('error', response.message);
-                            if (response.errors && response.errors.length > 0) {
-                                console.log('Errors:', response.errors);
-                            }
-                        }
-                    },
-                    error: function() {
-                        showToast('error', 'حدث خطأ في التحديد المجمع');
-                    }
-                });
-            }
+        $.ajax({
+        url: '@Url.Action("BulkAssignTracks", "Research")',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(assignments),
+        success: function(response) {
+        if (response.success) {
+        showToast('success', response.message);
+        location.reload();
+        } else {
+        showToast('error', response.message);
+        if (response.errors && response.errors.length > 0) {
+        console.log('Errors:', response.errors);
+        }
+        }
+        },
+        error: function() {
+        showToast('error', 'حدث خطأ في التحديد المجمع');
+        }
+        });
+        }
         }
 
         function applyAutoSuggestions() {
-            // Implementation for auto suggestions
-            showToast('info', 'جاري تطبيق الاقتراحات التلقائية...');
-            // You can implement this based on your requirements
+        // Implementation for auto suggestions
+        showToast('info', 'جاري تطبيق الاقتراحات التلقائية...');
+        // You can implement this based on your requirements
         }
 
         function showResearchPreview(researchId) {
-            $('#researchPreviewContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>');
-            $('#researchPreviewModal').modal('show');
+        $('#researchPreviewContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>');
+        $('#researchPreviewModal').modal('show');
 
-            // Load research preview via AJAX
-            $.get(`@Url.Action("Details", "Research")/${researchId}`)
-                .done(function(data) {
-                    $('#researchPreviewContent').html(data);
-                })
-                .fail(function() {
-                    $('#researchPreviewContent').html('<div class="alert alert-danger">فشل في تحميل معاينة البحث</div>');
-                });
+        // Load research preview via AJAX
+        $.get(`@Url.Action("Details", "Research")/${researchId}`)
+        .done(function(data) {
+        $('#researchPreviewContent').html(data);
+        })
+        .fail(function() {
+        $('#researchPreviewContent').html('<div class="alert alert-danger">فشل في تحميل معاينة البحث</div>');
+        });
         }
 
         function updateStatistics() {
-            // Update the statistics cards
-            var remaining = $('.research-checkbox').length;
-            // Update UI accordingly
+        // Update the statistics cards
+        var remaining = $('.research-checkbox').length;
+        // Update UI accordingly
         }
 
         function showToast(type, message) {
-            var alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
-            var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        var alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+        var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
 
-            var toast = $(`
-                <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
-                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                    <i class="fas ${icon} me-2"></i>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `);
+        var toast = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+        style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+        <i class="fas ${icon} me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        `);
 
-            $('body').append(toast);
+        $('body').append(toast);
 
-            setTimeout(() => {
-                toast.alert('close');
-            }, 5000);
+        setTimeout(() => {
+        toast.alert('close');
+        }, 5000);
         }
     </script>
 }
 
 @section Styles {
-    <style>
-        .table-warning {
-            --bs-table-accent-bg: rgba(255, 193, 7, 0.1);
-        }
+<style>
+    .table-warning {
+    --bs-table-accent-bg: rgba(255, 193, 7, 0.1);
+    }
 
-        .opacity-75 {
-            opacity: 0.75;
-        }
+    .opacity-75 {
+    opacity: 0.75;
+    }
 
-        .research-checkbox {
-            cursor: pointer;
-        }
+    .research-checkbox {
+    cursor: pointer;
+    }
 
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid rgba(0, 0, 0, 0.125);
-        }
+    .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    }
 
-        .btn-group-sm .btn {
-            padding: 0.25rem 0.4rem;
-        }
+    .btn-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    }
 
-        .badge {
-            font-size: 0.8em;
-        }
+    .badge {
+    font-size: 0.8em;
+    }
 
-        .modal-xl {
-            max-width: 90%;
-        }
+    .modal-xl {
+    max-width: 90%;
+    }
 
-        .progress {
-            height: 8px;
-        }
-    </style>
+    .progress {
+    height: 8px;
+    }
+</style>
 }
 
 @functions {
-    private string GetTrackDisplayName(ResearchManagement.Domain.Enums.ResearchTrack track)
+    private string GetTrackDisplayName(ResearchTrack? track)
     {
-        return track switch
+        if (!track.HasValue)
+            return "غير محدد"; // أو "Not Assigned"
+
+        return track.Value switch
         {
-            ResearchManagement.Domain.Enums.ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
-            ResearchManagement.Domain.Enums.ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
-            _ => track.ToString()
+            ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+            ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+            ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
+            _ => track.Value.ToString()
         };
     }
 }

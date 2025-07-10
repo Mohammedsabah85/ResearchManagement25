@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ResearchManagement.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using ResearchManagement.Infrastructure.Data;
 namespace ResearchManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250709195637_MakeTrackNullable")]
+    partial class MakeTrackNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,7 +352,7 @@ namespace ResearchManagement.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("Track")
+                    b.Property<int>("Track")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -601,7 +604,7 @@ namespace ResearchManagement.Infrastructure.Migrations
                     b.Property<string>("ChangedByUserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("FromTrack")
+                    b.Property<int>("FromTrack")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -613,7 +616,7 @@ namespace ResearchManagement.Infrastructure.Migrations
                     b.Property<int>("ResearchId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ToTrack")
+                    b.Property<int>("ToTrack")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

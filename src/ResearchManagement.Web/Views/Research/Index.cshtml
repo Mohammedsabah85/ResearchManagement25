@@ -1,4 +1,5 @@
-﻿@model ResearchManagement.Web.Models.ViewModels.Research.ResearchListViewModel
+﻿@using ResearchManagement.Domain.Enums
+@model ResearchManagement.Web.Models.ViewModels.Research.ResearchListViewModel
 @{
     ViewData["Title"] = "إدارة البحوث";
     Layout = "~/Views/Shared/_LayoutNew.cshtml";
@@ -442,18 +443,21 @@
 }
 
 @functions {
-    private string GetTrackDisplayName(ResearchManagement.Domain.Enums.ResearchTrack track)
+    private string GetTrackDisplayName(ResearchTrack? track)
     {
-        return track switch
+        if (!track.HasValue)
+            return "غير محدد"; // أو "Not Assigned"
+
+        return track.Value switch
         {
-            ResearchManagement.Domain.Enums.ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
-            ResearchManagement.Domain.Enums.ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
-            ResearchManagement.Domain.Enums.ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
-            _ => track.ToString()
+            ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+            ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+            ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
+            _ => track.Value.ToString()
         };
     }
 

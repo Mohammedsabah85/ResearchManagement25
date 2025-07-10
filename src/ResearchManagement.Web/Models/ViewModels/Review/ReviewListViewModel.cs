@@ -36,7 +36,7 @@ namespace ResearchManagement.Web.Models.ViewModels.Review
         public string ResearchTitle { get; set; } = string.Empty;
         public string? ResearchTitleEn { get; set; }
         public string ResearchAuthor { get; set; } = string.Empty;
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
         public string ReviewerId { get; set; } = string.Empty;
         public string ReviewerName { get; set; } = string.Empty;
 

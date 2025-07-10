@@ -18,7 +18,7 @@ namespace ResearchManagement.Application.Commands.Research
     public class AssignResearchToTrackCommand : IRequest<bool>
     {
         public int ResearchId { get; set; }
-        public ResearchTrack NewTrack { get; set; }
+        public ResearchTrack? NewTrack { get; set; }
         public string? Notes { get; set; }
         public string UserId { get; set; } = string.Empty;
 

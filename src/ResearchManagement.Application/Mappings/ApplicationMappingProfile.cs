@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ResearchManagement.Application.DTOs;
 using ResearchManagement.Domain.Entities;
+using ResearchManagement.Domain.Enums;
 using System;
 using System.Linq;
 
@@ -42,6 +43,8 @@ namespace ResearchManagement.Application.Mappings
                 .ForMember(dest => dest.Reviews, opt => opt.Ignore())
                 .ForMember(dest => dest.StatusHistory, opt => opt.Ignore())
                 .ForMember(dest => dest.Authors, opt => opt.Ignore());
+      
+            
 
             CreateMap<UpdateResearchDto, Research>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))

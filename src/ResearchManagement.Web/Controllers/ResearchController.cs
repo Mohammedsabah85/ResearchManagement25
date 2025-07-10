@@ -17,6 +17,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ResearchManagement.Infrastructure.Data;
+using static ResearchManagement.Web.Models.ViewModels.Research.ResearchTrackAssignmentDto;
 
 
 
@@ -204,12 +205,12 @@ namespace ResearchManagement.Web.Controllers
         [Authorize(Roles = "Researcher,SystemAdmin")]
         public async Task<IActionResult> Create(CreateResearchViewModel model, List<IFormFile> files)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return View(model);
-                }
+            //try
+            //{
+                //if (!ModelState.IsValid)
+                //{
+                //    return View(model);
+                //}
 
                 var user = await GetCurrentUserAsync();
                 if (user == null)
@@ -257,13 +258,13 @@ namespace ResearchManagement.Web.Controllers
 
                 TempData["SuccessMessage"] = "تم تقديم البحث بنجاح";
                 return RedirectToAction(nameof(Details), new { id = researchId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while creating research");
-                TempData["ErrorMessage"] = "حدث خطأ أثناء تقديم البحث";
-                return View(model);
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError(ex, "Error occurred while creating research");
+            //    TempData["ErrorMessage"] = "حدث خطأ أثناء تقديم البحث";
+            //    return View(model);
+            //}
         }
 
         //// GET: Research/Edit/5
@@ -817,16 +818,32 @@ namespace ResearchManagement.Web.Controllers
                 }).ToList();
         }
 
+        //private List<SelectListItem> GetTrackOptions()
+        //{
+        //    return Enum.GetValues<ResearchTrack>()
+        //        .Select(x => new SelectListItem
+        //        {
+        //            Value = ((int)x).ToString(),
+        //            Text = GetTrackDisplayName(x)
+        //        }).ToList();
+        //}
         private List<SelectListItem> GetTrackOptions()
         {
-            return Enum.GetValues<ResearchTrack>()
+            var options = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "سيتم تحديده لاحقاً", Selected = true }
+    };
+
+            options.AddRange(Enum.GetValues<ResearchTrack>()
+                .Where(t => t != ResearchTrack.NotAssigned) // استبعاد NotAssigned من القائمة
                 .Select(x => new SelectListItem
                 {
                     Value = ((int)x).ToString(),
                     Text = GetTrackDisplayName(x)
-                }).ToList();
-        }
+                }));
 
+            return options;
+        }
 
         // POST: Research/Delete/5
         [HttpPost]
@@ -1275,7 +1292,7 @@ namespace ResearchManagement.Web.Controllers
 
 
 // Helper method لتسجيل تغيير المسار
-private async Task LogTrackAssignment(int researchId, ResearchTrack oldTrack, ResearchTrack newTrack, string userId, string? notes)
+private async Task LogTrackAssignment(int researchId, ResearchTrack? oldTrack, ResearchTrack? newTrack, string userId, string? notes)
         {
             try
             {
@@ -1405,6 +1422,7 @@ private async Task LogTrackAssignment(int researchId, ResearchTrack oldTrack, Re
 
         private static string GetTrackDisplayName(ResearchTrack track) => track switch
         {
+            ResearchTrack.NotAssigned => "غير محدد",
             ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
             ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
             ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
@@ -1414,6 +1432,7 @@ private async Task LogTrackAssignment(int researchId, ResearchTrack oldTrack, Re
             ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
             _ => track.ToString()
         };
+
 
         private static FileType GetFileType(string contentType) => contentType.ToLower() switch
         {

@@ -43,7 +43,7 @@ namespace ResearchManagement.Web.Models.ViewModels.Research
 
         [Required(ErrorMessage = "مسار البحث مطلوب")]
         [Display(Name = "مسار البحث")]
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
 
         [Display(Name = "المنهجية")]
         [StringLength(2000, ErrorMessage = "المنهجية يجب أن تكون أقل من 2000 حرف")]

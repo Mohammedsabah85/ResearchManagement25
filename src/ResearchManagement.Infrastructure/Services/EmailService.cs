@@ -262,9 +262,12 @@ namespace ResearchManagement.Infrastructure.Services
             };
         }
 
-        private string GetTrackDisplayName(ResearchTrack track)
+        private string GetTrackDisplayName(ResearchTrack? track)
         {
-            return track switch
+            if (!track.HasValue)
+                return "غير محدد"; // أو "Not Assigned"
+
+            return track.Value switch
             {
                 ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
                 ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
@@ -273,7 +276,7 @@ namespace ResearchManagement.Infrastructure.Services
                 ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
                 ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
                 ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
-                _ => track.ToString()
+                _ => track.Value.ToString()
             };
         }
 

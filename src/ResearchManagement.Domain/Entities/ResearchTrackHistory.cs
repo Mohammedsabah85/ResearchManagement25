@@ -14,8 +14,8 @@ namespace ResearchManagement.Domain.Entities
         [Key]
         public int Id { get; set; }
         public int ResearchId { get; set; }
-        public ResearchTrack FromTrack { get; set; }
-        public ResearchTrack ToTrack { get; set; }
+        public ResearchTrack? FromTrack { get; set; }
+        public ResearchTrack? ToTrack { get; set; }
         public DateTime ChangedAt { get; set; }
         public string ChangedBy { get; set; } = string.Empty;
         public string? Notes { get; set; }

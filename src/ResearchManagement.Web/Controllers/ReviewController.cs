@@ -217,43 +217,49 @@ namespace ResearchManagement.Web.Controllers
         }
 
         // Helper method for track display names
-        private string GetTrackDisplayName(ResearchTrack track) => track switch
+        private string GetTrackDisplayName(ResearchTrack? track)
         {
-            ResearchTrack.EnergyAndRenewableEnergy => "الطاقة والطاقة المتجددة",
-            ResearchTrack.ElectricalAndElectronicsEngineering => "الهندسة الكهربائية والإلكترونية",
-            ResearchTrack.MaterialScienceAndMechanicalEngineering => "علوم المواد والهندسة الميكانيكية",
-            ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "أنظمة الملاحة والتوجيه وهندسة الحاسوب والاتصالات",
-            ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "النظم الكهروميكانيكية وهندسة الميكانيك",
-            ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "أنظمة الطيران وهندسة الطائرات والطائرات بدون طيار",
-            ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "الموارد الطبيعية للأرض وأنظمة ومعدات الغاز والبترول",
-            _ => track.ToString()
-        };
-        //public async Task<IActionResult> Index()
-        //{
-        //    var userId = GetCurrentUserId();
-        //    var reviews = await _reviewRepository.GetByReviewerIdAsync(userId);
-        //    return View(reviews);
-        //}
+            if (!track.HasValue)
+                return "غير محدد"; // أو "Not Assigned"
 
-        //[HttpGet]
-        //public async Task<IActionResult> Details(int id)
-        //{
-        //    var review = await _reviewRepository.GetByIdWithDetailsAsync(id);
-        //    if (review == null)
-        //        return NotFound();
+            return track.Value switch
+            {
+                ResearchTrack.EnergyAndRenewableEnergy => "Energy and Renewable Energy",
+                ResearchTrack.ElectricalAndElectronicsEngineering => "Electromechanical System, and Mechatronics Engineering",
+                ResearchTrack.MaterialScienceAndMechanicalEngineering => "Material Science & Mechanical Engineering",
+                ResearchTrack.NavigationGuidanceSystemsComputerAndCommunicationEngineering => "Navigation & Guidance Systems, Computer and Communication Engineering",
+                ResearchTrack.ElectromechanicalSystemAndMechanicsEngineering => "Electrical & Electronics Engineering",
+                ResearchTrack.AvionicsSystemsAircraftAndUnmannedAircraftEngineering => "Avionics Systems, Aircraft and Unmanned Aircraft Engineering",
+                ResearchTrack.EarthNaturalResourcesGasAndPetroleumSystemsEquipment => "Earth's Natural Resources, Gas and Petroleum Systems & Equipment",
+                _ => track.Value.ToString()
+            };
+        }
+    //public async Task<IActionResult> Index()
+    //{
+    //    var userId = GetCurrentUserId();
+    //    var reviews = await _reviewRepository.GetByReviewerIdAsync(userId);
+    //    return View(reviews);
+    //}
 
-        //    var user = await GetCurrentUserAsync();
-        //    if (user == null)
-        //        return RedirectToAction("Login", "Account");
+    //[HttpGet]
+    //public async Task<IActionResult> Details(int id)
+    //{
+    //    var review = await _reviewRepository.GetByIdWithDetailsAsync(id);
+    //    if (review == null)
+    //        return NotFound();
 
-        //    // التحقق من الصلاحيات
-        //    if (user.Role == UserRole.Reviewer && review.ReviewerId != user.Id)
-        //        return Forbid();
+    //    var user = await GetCurrentUserAsync();
+    //    if (user == null)
+    //        return RedirectToAction("Login", "Account");
 
-        //    return View(review);
-        //}
+    //    // التحقق من الصلاحيات
+    //    if (user.Role == UserRole.Reviewer && review.ReviewerId != user.Id)
+    //        return Forbid();
 
-        [HttpGet]
+    //    return View(review);
+    //}
+
+    [HttpGet]
         [Authorize(Roles = "Reviewer")]
         public async Task<IActionResult> Create(int researchId)
         {

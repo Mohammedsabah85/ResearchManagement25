@@ -54,6 +54,8 @@ namespace ResearchManagement.Application.Commands.Research
                 research.SubmissionDate = DateTime.UtcNow;
                 research.CreatedAt = DateTime.UtcNow;
                 research.CreatedBy = request.UserId;
+                //research.Track = request.Research.Track != 0 ? request.Research.Track : ResearchTrack.NotAssigned;
+
 
                 _logger.LogInformation("تم تحويل البيانات بنجاح");
 

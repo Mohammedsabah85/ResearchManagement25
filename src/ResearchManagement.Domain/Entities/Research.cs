@@ -33,7 +33,7 @@ namespace ResearchManagement.Domain.Entities
         public ResearchType ResearchType { get; set; }
         public ResearchLanguage Language { get; set; }
         public ResearchStatus Status { get; set; } = ResearchStatus.Submitted;
-        public ResearchTrack Track { get; set; }
+        public ResearchTrack? Track { get; set; }
 
         [StringLength(200)]
         public string? Methodology { get; set; }

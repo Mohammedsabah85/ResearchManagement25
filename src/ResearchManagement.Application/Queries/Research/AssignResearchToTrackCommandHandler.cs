@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ResearchManagement.Application.Commands.Research;
@@ -43,8 +44,8 @@ namespace ResearchManagement.Application.Handlers.Research
                 }
 
                 var oldTrack = research.Track;
-                var oldTrackDisplayName = GetTrackDisplayName(oldTrack);
-                var newTrackDisplayName = GetTrackDisplayName(request.NewTrack);
+                var oldTrackDisplayName = oldTrack.HasValue ? GetTrackDisplayName(oldTrack.Value) : "غير محدد";
+                var newTrackDisplayName = request.NewTrack.HasValue ? GetTrackDisplayName(request.NewTrack.Value) : "غير محدد";
 
                 await _unitOfWork.BeginTransactionAsync();
 
@@ -53,24 +54,35 @@ namespace ResearchManagement.Application.Handlers.Research
                 research.UpdatedAt = DateTime.UtcNow;
                 research.UpdatedBy = request.UserId;
 
-                // البحث عن مدير المسار المناسب
-                var trackManager = await _unitOfWork.TrackManagers
-                    .FirstOrDefaultAsync(tm => tm.Track == request.NewTrack && tm.IsActive);
-
-                if (trackManager != null)
+                // البحث عن مدير المسار المناسب إذا تم تحديد مسار
+                TrackManager? trackManager = null;
+                if (request.NewTrack.HasValue)
                 {
-                    research.AssignedTrackManagerId = trackManager.Id;
-                    research.Status = ResearchStatus.AssignedForReview;
+                    trackManager = await _unitOfWork.TrackManagers
+                        .FirstOrDefaultAsync(tm => tm.Track == request.NewTrack.Value && tm.IsActive);
 
-                    // إرسال إشعار لمدير المسار الجديد
-                    await _notificationService.NotifyTrackManagerAsync(
-                        trackManager.UserId,
-                        research.Id,
-                        research.Title);
+                    if (trackManager != null)
+                    {
+                        research.AssignedTrackManagerId = trackManager.Id;
+                        research.Status = ResearchStatus.AssignedForReview;
+
+                        // إرسال إشعار لمدير المسار الجديد
+                        await _notificationService.NotifyTrackManagerAsync(
+                            trackManager.UserId,
+                            research.Id,
+                            research.Title);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("لم يتم العثور على مدير مسار نشط للمسار {Track}", request.NewTrack);
+                    }
                 }
                 else
                 {
-                    _logger.LogWarning("لم يتم العثور على مدير مسار نشط للمسار {Track}", request.NewTrack);
+                    // إذا تم إزالة التعيين للمسار
+                    research.AssignedTrackManagerId = null;
+                    research.Status = ResearchStatus.Submitted; // العودة للحالة الأولى
+                    _logger.LogInformation("تم إزالة تعيين المسار للبحث {ResearchId}", request.ResearchId);
                 }
 
                 // تحديث البحث
@@ -106,7 +118,7 @@ namespace ResearchManagement.Application.Handlers.Research
                 await _unitOfWork.CommitTransactionAsync();
 
                 _logger.LogInformation("تم تحديد مسار البحث {ResearchId} من {OldTrack} إلى {NewTrack} بواسطة {UserId}",
-                    request.ResearchId, oldTrack, request.NewTrack, request.UserId);
+                    request.ResearchId, oldTrack?.ToString() ?? "غير محدد", request.NewTrack?.ToString() ?? "غير محدد", request.UserId);
 
                 return true;
             }
