@@ -8,7 +8,7 @@ namespace ResearchManagement.Web.Models.ViewModels
         public int TrackId { get; set; }
         public string TrackName { get; set; } = string.Empty;
         public List<Domain.Entities.Research> PendingResearches { get; set; } = new();
-        public List<User> Reviewers { get; set; } = new();
+        public List<Domain.Entities.User> Reviewers { get; set; } = new();
     }
 
     public class AssignReviewViewModel

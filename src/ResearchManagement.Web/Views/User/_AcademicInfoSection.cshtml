@@ -1,0 +1,44 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.CreateUserViewModel
+
+<div class="form-section mb-4">
+    <h6 class="section-title text-primary mb-3">
+        <i class="fas fa-graduation-cap me-2"></i>المعلومات الأكاديمية
+    </h6>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Institution" class="form-label">المؤسسة التعليمية</label>
+            <input asp-for="Institution" class="form-control" placeholder="اسم الجامعة أو المؤسسة" />
+            <span asp-validation-for="Institution" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="AcademicDegree" class="form-label">الدرجة العلمية</label>
+            <select asp-for="AcademicDegree" class="form-select">
+                <option value="">اختر الدرجة العلمية</option>
+                <option value="بكالوريوس">بكالوريوس</option>
+                <option value="ماجستير">ماجستير</option>
+                <option value="دكتوراه">دكتوراه</option>
+                <option value="أستاذ مساعد">أستاذ مساعد</option>
+                <option value="أستاذ مشارك">أستاذ مشارك</option>
+                <option value="أستاذ">أستاذ</option>
+                <option value="أخرى">أخرى</option>
+            </select>
+            <span asp-validation-for="AcademicDegree" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="OrcidId" class="form-label">معرف ORCID</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                <input asp-for="OrcidId" class="form-control" placeholder="0000-0000-0000-0000" pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}" />
+                <a href="https://orcid.org/" target="_blank" class="btn btn-outline-secondary" title="ما هو ORCID؟">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </div>
+            <span asp-validation-for="OrcidId" class="text-danger"></span>
+            <div class="form-text">معرف ORCID اختياري ولكن يُنصح به للباحثين</div>
+        </div>
+    </div>
+</div>

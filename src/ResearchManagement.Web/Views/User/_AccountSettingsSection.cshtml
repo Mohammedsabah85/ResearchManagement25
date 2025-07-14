@@ -1,0 +1,28 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.CreateUserViewModel
+
+<div class="form-section mb-4">
+    <h6 class="section-title text-primary mb-3">
+        <i class="fas fa-cogs me-2"></i>إعدادات الحساب
+    </h6>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="form-check form-switch">
+                <input asp-for="IsActive" class="form-check-input" checked />
+                <label asp-for="IsActive" class="form-check-label">
+                    <strong>تفعيل الحساب</strong>
+                    <br><small class="text-muted">يمكن للمستخدم تسجيل الدخول والوصول للنظام</small>
+                </label>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="form-check form-switch">
+                <input asp-for="EmailConfirmed" class="form-check-input" />
+                <label asp-for="EmailConfirmed" class="form-check-label">
+                    <strong>تأكيد البريد الإلكتروني</strong>
+                    <br><small class="text-muted">البريد الإلكتروني مؤكد ولا يحتاج لتفعيل</small>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

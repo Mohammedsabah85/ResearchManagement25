@@ -1,0 +1,559 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.UserDetailsViewModel
+@{
+    ViewData["Title"] = "تفاصيل المستخدم";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-user me-2 text-primary"></i>تفاصيل المستخدم</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a asp-action="Index">المستخدمين</a></li>
+                        <li class="breadcrumb-item active">@Model.User.FullName</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a asp-action="Edit" asp-route-id="@Model.User.Id" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-edit me-1"></i>تعديل
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Profile Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="avatar-lg mx-auto mb-3">
+                    <div class="avatar-title bg-primary text-white rounded-circle fs-1">
+                        @Model.User.FirstName.Substring(0, 1)@Model.User.LastName.Substring(0, 1)
+                    </div>
+                </div>
+                
+                <h4 class="mb-1">@Model.User.FullName</h4>
+                @if (!string.IsNullOrEmpty(Model.User.FullNameEn))
+                {
+                    <p class="text-muted mb-2">@Model.User.FullNameEn</p>
+                }
+                
+                <span class="badge bg-@GetRoleColorClass(Model.User.Role) mb-3">
+                    @GetRoleDisplayName(Model.User.Role)
+                </span>
+
+                <!-- Status Indicators -->
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            @if (Model.IsActive)
+                            {
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                                <p class="text-success mb-0 small">حساب نشط</p>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times-circle text-danger fs-4"></i>
+                                <p class="text-danger mb-0 small">حساب غير نشط</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        @if (Model.EmailConfirmed)
+                        {
+                            <i class="fas fa-envelope-circle-check text-success fs-4"></i>
+                            <p class="text-success mb-0 small">بريد مؤكد</p>
+                        }
+                        else
+                        {
+                            <i class="fas fa-envelope text-warning fs-4"></i>
+                            <p class="text-warning mb-0 small">بريد غير مؤكد</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="text-start">
+                    <div class="mb-2">
+                        <i class="fas fa-envelope text-muted me-2"></i>
+                        <a href="mailto:@Model.User.Email" class="text-decoration-none">@Model.User.Email</a>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.User.Institution))
+                    {
+                        <div class="mb-2">
+                            <i class="fas fa-building text-muted me-2"></i>
+                            <span>@Model.User.Institution</span>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.User.AcademicDegree))
+                    {
+                        <div class="mb-2">
+                            <i class="fas fa-graduation-cap text-muted me-2"></i>
+                            <span>@Model.User.AcademicDegree</span>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.User.OrcidId))
+                    {
+                        <div class="mb-2">
+                            <i class="fas fa-id-card text-muted me-2"></i>
+                            <a href="https://orcid.org/@Model.User.OrcidId" target="_blank" class="text-decoration-none">
+                                ORCID: @Model.User.OrcidId
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="mt-3 d-grid gap-2">
+                    <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                        <i class="fas fa-key me-1"></i>إعادة تعيين كلمة المرور
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm toggle-status" 
+                            data-user-id="@Model.User.Id" data-current-status="@Model.IsActive">
+                        <i class="fas fa-power-off me-1"></i>@(Model.IsActive ? "إلغاء التفعيل" : "تفعيل الحساب")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details and Statistics -->
+    <div class="col-md-8">
+        <!-- Account Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات الحساب</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>تاريخ التسجيل:</strong>
+                        <p class="mb-0">@Model.RegistrationDate.ToString("yyyy/MM/dd HH:mm")</p>
+                        <small class="text-muted">منذ @Model.AccountAgeText</small>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>آخر دخول:</strong>
+                        @if (Model.LastLoginDate.HasValue)
+                        {
+                            <p class="mb-0">@Model.LastLoginDate.Value.ToString("yyyy/MM/dd HH:mm")</p>
+                            <small class="text-muted">منذ @((DateTime.UtcNow - Model.LastLoginDate.Value).Days) يوم</small>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted">لم يسجل دخول بعد</p>
+                        }
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>معرف المستخدم:</strong>
+                        <p class="mb-0 font-monospace">@Model.User.Id</p>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>الأدوار:</strong>
+                        <div>
+                            @foreach (var role in Model.Roles)
+                            {
+                                <span class="badge bg-secondary me-1">@role</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>إحصائيات النشاط</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-primary mb-1">@Model.TotalResearches</h4>
+                            <small class="text-muted">البحوث المقدمة</small>
+                        </div>
+                    </div>
+                    <div class="col-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-success mb-1">@Model.CompletedReviews</h4>
+                            <small class="text-muted">المراجعات المكتملة</small>
+                        </div>
+                    </div>
+                    <div class="col-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-warning mb-1">@Model.PendingReviews</h4>
+                            <small class="text-muted">المراجعات المعلقة</small>
+                        </div>
+                    </div>
+                    <div class="col-3 mb-3">
+                        <h4 class="text-info mb-1">@Model.AverageReviewScore.ToString("F1")</h4>
+                        <small class="text-muted">متوسط التقييم</small>
+                    </div>
+                </div>
+
+                @if (Model.TotalResearches > 0 || Model.CompletedReviews > 0)
+                {
+                    <hr>
+                    <div class="row">
+                        @if (Model.TotalResearches > 0)
+                        {
+                            <div class="col-md-6">
+                                <h6>نشاط البحوث</h6>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: @((double)Model.TotalResearches / Math.Max(Model.TotalResearches + Model.CompletedReviews, 1) * 100)%"></div>
+                                </div>
+                                <small class="text-muted">@Model.TotalResearches بحث مقدم</small>
+                            </div>
+                        }
+                        @if (Model.CompletedReviews > 0)
+                        {
+                            <div class="col-md-6">
+                                <h6>نشاط المراجعات</h6>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: @((double)Model.CompletedReviews / Math.Max(Model.TotalResearches + Model.CompletedReviews, 1) * 100)%"></div>
+                                </div>
+                                <small class="text-muted">@Model.CompletedReviews مراجعة مكتملة</small>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>معلومات النظام</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>تم الإنشاء بواسطة:</strong>
+                        <p class="mb-0">@(Model.User.CreatedBy ?? "النظام")</p>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>آخر تحديث:</strong>
+                        @if (Model.User.UpdatedAt.HasValue)
+                        {
+                            <p class="mb-0">@Model.User.UpdatedAt.Value.ToString("yyyy/MM/dd HH:mm")</p>
+                            <small class="text-muted">بواسطة: @(Model.User.UpdatedBy ?? "غير محدد")</small>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted">لم يتم التحديث</p>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Additional Actions -->
+                <div class="mt-3">
+                    <div class="btn-group btn-group-sm">
+                        <a asp-action="Edit" asp-route-id="@Model.User.Id" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i>تعديل المستخدم
+                        </a>
+                        <a asp-controller="Research" asp-action="Index" asp-route-userId="@Model.User.Id" class="btn btn-outline-info">
+                            <i class="fas fa-file-alt me-1"></i>عرض البحوث
+                        </a>
+                        <a asp-controller="Review" asp-action="Index" asp-route-reviewerId="@Model.User.Id" class="btn btn-outline-warning">
+                            <i class="fas fa-clipboard-check me-1"></i>عرض المراجعات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إعادة تعيين كلمة المرور</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="resetPasswordForm">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        سيتم إنشاء كلمة مرور جديدة وإرسالها للمستخدم عبر البريد الإلكتروني.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">كلمة المرور الجديدة</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6">
+                            <button type="button" class="btn btn-outline-secondary" id="generatePassword">
+                                <i class="fas fa-random"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">تأكيد كلمة المرور</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="sendEmailNotification" checked>
+                        <label class="form-check-label" for="sendEmailNotification">
+                            إرسال إشعار بالبريد الإلكتروني للمستخدم
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-key me-1"></i>إعادة تعيين كلمة المرور
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "باحث",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "مقيم",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "مدير تراك",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "مدير المؤتمر",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "مدير النظام",
+            _ => role.ToString()
+        };
+    }
+
+    private string GetRoleColorClass(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "primary",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "info",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "warning",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "success",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "danger",
+            _ => "secondary"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle user status
+            $('.toggle-status').click(function() {
+                const userId = $(this).data('user-id');
+                const currentStatus = $(this).data('current-status');
+                const button = $(this);
+                
+                const action = currentStatus ? 'إلغاء تفعيل' : 'تفعيل';
+                
+                if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
+                    $.post('@Url.Action("ToggleStatus")', {
+                        id: userId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            showNotification(response.message, 'error');
+                        }
+                    })
+                    .fail(function() {
+                        showNotification('حدث خطأ في الاتصال', 'error');
+                    });
+                }
+            });
+
+            // Generate random password
+            $('#generatePassword').click(function() {
+                const password = generateRandomPassword(8);
+                $('#newPassword, #confirmPassword').val(password);
+            });
+
+            // Toggle password visibility
+            $('#togglePassword').click(function() {
+                const passwordField = $('#newPassword');
+                const icon = $(this).find('i');
+                
+                if (passwordField.attr('type') === 'password') {
+                    passwordField.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    passwordField.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+
+            // Reset password form submission
+            $('#resetPasswordForm').submit(function(e) {
+                e.preventDefault();
+                
+                const newPassword = $('#newPassword').val();
+                const confirmPassword = $('#confirmPassword').val();
+                
+                if (newPassword !== confirmPassword) {
+                    showNotification('كلمة المرور وتأكيد كلمة المرور غير متطابقين', 'error');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    showNotification('كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل', 'error');
+                    return;
+                }
+
+                // Here you would typically send the form data to the server
+                $('#resetPasswordModal').modal('hide');
+                showNotification('تم إعادة تعيين كلمة المرور بنجاح', 'success');
+            });
+        });
+
+        function generateRandomPassword(length) {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            return password;
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 
+                              'alert-info';
+
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            $('body').append(notification);
+
+            setTimeout(function() {
+                notification.fadeOut();
+            }, 3000);
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .avatar-lg {
+            width: 5rem;
+            height: 5rem;
+        }
+
+        .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .border-end {
+            border-right: 1px solid #dee2e6 !important;
+        }
+
+        .font-monospace {
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .progress {
+            height: 0.5rem;
+        }
+
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "/";
+        }
+
+        .badge {
+            font-size: 0.75em;
+            padding: 0.35em 0.65em;
+        }
+
+        .text-decoration-none:hover {
+            text-decoration: underline !important;
+        }
+
+        .modal-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        @@media (max-width: 768px) {
+            .avatar-lg {
+                width: 4rem;
+                height: 4rem;
+            }
+            
+            .fs-1 {
+                font-size: 1.5rem !important;
+            }
+            
+            .border-end {
+                border-right: none !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                padding-bottom: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .btn-group-sm > .btn {
+                padding: 0.125rem 0.25rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+}
+
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()

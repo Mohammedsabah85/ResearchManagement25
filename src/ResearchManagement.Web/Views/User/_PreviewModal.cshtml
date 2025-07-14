@@ -1,0 +1,25 @@
+﻿<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">معاينة بيانات المستخدم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تعديل</button>
+                <button type="button" class="btn btn-primary" id="confirmCreate">تأكيد الإنشاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* Include the main JavaScript file *@
+    <script src="~/js/CreateUser.js" asp-append-version="true"></script>
+
+    @* Include the Razor script section with styles and additional functionality *@
+    <partial name="_CreateUserRazorScripts" />
+}

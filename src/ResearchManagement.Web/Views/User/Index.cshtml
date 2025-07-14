@@ -1,0 +1,617 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.UserListViewModel
+@{
+    ViewData["Title"] = "إدارة المستخدمين";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-users me-2 text-primary"></i>إدارة المستخدمين</h2>
+                <p class="text-muted mb-0">عرض وإدارة جميع المستخدمين في النظام</p>
+            </div>
+            <div>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>إضافة مستخدم جديد
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.TotalUsers</h4>
+                <small>إجمالي المستخدمين</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.ActiveUsers</h4>
+                <small>المستخدمين النشطين</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-graduation-cap fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.ResearchersCount</h4>
+                <small>الباحثين</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.ReviewersCount</h4>
+                <small>المقيمين</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-cog fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.TrackManagersCount</h4>
+                <small>مديري التراك</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-dark text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-crown fa-2x mb-2"></i>
+                <h4 class="mb-1">@Model.Statistics.SystemAdminsCount</h4>
+                <small>مديري النظام</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-search me-2"></i>البحث والفلترة</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">البحث</label>
+                    <input type="text" name="search" value="@Model.SearchTerm" class="form-control"
+                           placeholder="البحث بالاسم أو البريد الإلكتروني أو المؤسسة">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">الدور</label>
+                    <select name="role" class="form-select">
+                        <option value="">جميع الأدوار</option>
+                        @foreach (var role in Model.RoleOptions)
+                        {
+                            <option value="@role.Value"
+                                    selected="@(Model.SelectedRole?.ToString() == role.Value)">
+                                @role.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">الحالة</label>
+                    <select name="isActive" class="form-select">
+                        <option value="">جميع الحالات</option>
+                        <option value="true" selected="@(Model.SelectedIsActive == true)">نشط</option>
+                        <option value="false" selected="@(Model.SelectedIsActive == false)">غير نشط</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>بحث
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">قائمة المستخدمين (@Model.TotalUsers)</h5>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-secondary" id="selectAll">
+                <i class="fas fa-check-square me-1"></i>تحديد الكل
+            </button>
+            <button type="button" class="btn btn-outline-danger" id="deleteSelected" disabled>
+                <i class="fas fa-trash me-1"></i>حذف المحدد
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Users.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="3%">
+                                <input type="checkbox" class="form-check-input" id="masterCheckbox">
+                            </th>
+                            <th width="25%">المستخدم</th>
+                            <th width="20%">البريد الإلكتروني</th>
+                            <th width="15%">المؤسسة</th>
+                            <th width="10%">الدور</th>
+                            <th width="10%">الحالة</th>
+                            <th width="12%">تاريخ التسجيل</th>
+                            <th width="5%">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr data-user-id="@user.Id">
+                                <td>
+                                    <input type="checkbox" class="form-check-input user-checkbox" value="@user.Id">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <div class="avatar-title bg-primary text-white rounded-circle">
+                                                @user.FirstName.Substring(0, 1)@user.LastName.Substring(0, 1)
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">
+                                                <a asp-action="Details" asp-route-id="@user.Id"
+                                                   class="text-decoration-none">
+                                                    @user.FirstName @user.LastName
+                                                </a>
+                                            </h6>
+                                            @if (!string.IsNullOrEmpty(user.FirstNameEn))
+                                            {
+                                                <small class="text-muted">@user.FirstNameEn @user.LastNameEn</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="mailto:@user.Email" class="text-decoration-none">@user.Email</a>
+                                    @if (user.EmailConfirmed)
+                                    {
+                                        <i class="fas fa-check-circle text-success ms-1" title="البريد مؤكد"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-exclamation-circle text-warning ms-1" title="البريد غير مؤكد"></i>
+                                    }
+                                </td>
+                                <td>
+                                    <span title="@(user.Institution ?? "غير محدد")">
+                                        @((user.Institution?.Length > 30 ? user.Institution.Substring(0, 30) + "..." : user.Institution) ?? "غير محدد")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@GetRoleColorClass(user.Role)">
+                                        @GetRoleDisplayName(user.Role)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input status-toggle" type="checkbox"
+                                               data-user-id="@user.Id"
+                                        @(user.IsActive ? "checked" : "")>
+                                        <label class="form-check-label">
+                                            <span class="status-text">@(user.IsActive ? "نشط" : "غير نشط")</span>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span title="@user.CreatedAt.ToString("yyyy/MM/dd HH:mm")">
+                                        @user.CreatedAt.ToString("yyyy/MM/dd")
+                                    </span>
+                                    @if (user.LastLoginAt.HasValue)
+                                    {
+                                        <br>
+
+                                        <small class="text-muted">
+                                            آخر دخول: @user.LastLoginAt.Value.ToString("MM/dd HH:mm")
+                                        </small>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@user.Id"
+                                           class="btn btn-outline-primary btn-sm" title="عرض التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                                                data-bs-toggle="dropdown">
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" asp-action="Edit" asp-route-id="@user.Id">
+                                                    <i class="fas fa-edit me-2"></i>تعديل
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" asp-action="ResetPassword" asp-route-id="@user.Id">
+                                                    <i class="fas fa-key me-2"></i>إعادة تعيين كلمة المرور
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <button class="dropdown-item text-danger delete-user"
+                                                        data-user-id="@user.Id"
+                                                        data-user-name="@user.FirstName @user.LastName">
+                                                    <i class="fas fa-trash me-2"></i>حذف
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav aria-label="صفحات المستخدمين">
+                        <ul class="pagination justify-content-center mb-0">
+                            @if (Model.HasPreviousPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-route-page="@(Model.CurrentPage - 1)"
+                                       asp-route-search="@Model.SearchTerm"
+                                       asp-route-role="@Model.SelectedRole"
+                                       asp-route-isActive="@Model.SelectedIsActive">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-route-page="@i"
+                                       asp-route-search="@Model.SearchTerm"
+                                       asp-route-role="@Model.SelectedRole"
+                                       asp-route-isActive="@Model.SelectedIsActive">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (Model.HasNextPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-route-page="@(Model.CurrentPage + 1)"
+                                       asp-route-search="@Model.SearchTerm"
+                                       asp-route-role="@Model.SelectedRole"
+                                       asp-route-isActive="@Model.SelectedIsActive">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            عرض @((Model.CurrentPage - 1) * Model.PageSize + 1) إلى
+                            @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalUsers)
+                            من @Model.TotalUsers مستخدم
+                        </small>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد مستخدمين</h5>
+                <p class="text-muted">لم يتم العثور على مستخدمين بالمعايير المحددة</p>
+                @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.SelectedRole.HasValue || Model.SelectedIsActive.HasValue)
+                {
+                    <a asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fas fa-times me-2"></i>مسح الفلاتر
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>إضافة أول مستخدم
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "باحث",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "مقيم",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "مدير تراك",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "مدير المؤتمر",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "مدير النظام",
+            _ => role.ToString()
+        };
+    }
+
+    private string GetRoleColorClass(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "primary",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "info",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "warning",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "success",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "danger",
+            _ => "secondary"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Master checkbox functionality
+            $('#masterCheckbox').change(function() {
+                $('.user-checkbox').prop('checked', this.checked);
+                updateDeleteButton();
+            });
+
+            // Individual checkbox functionality
+            $('.user-checkbox').change(function() {
+                updateDeleteButton();
+                updateMasterCheckbox();
+            });
+
+            // Status toggle functionality
+            $('.status-toggle').change(function() {
+                const userId = $(this).data('user-id');
+                const toggle = $(this);
+                const statusText = toggle.closest('td').find('.status-text');
+
+                $.post('@Url.Action("ToggleStatus")', {
+                    id: userId,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        statusText.text(response.isActive ? 'نشط' : 'غير نشط');
+                        showNotification(response.message, 'success');
+                    } else {
+                        toggle.prop('checked', !toggle.prop('checked'));
+                        showNotification(response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    toggle.prop('checked', !toggle.prop('checked'));
+                    showNotification('حدث خطأ في الاتصال', 'error');
+                });
+            });
+
+            // Delete user functionality
+            $('.delete-user').click(function() {
+                const userId = $(this).data('user-id');
+                const userName = $(this).data('user-name');
+
+                if (confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟\n\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+                    deleteUser(userId);
+                }
+            });
+
+            // Select all functionality
+            $('#selectAll').click(function() {
+                $('.user-checkbox').prop('checked', true);
+                updateDeleteButton();
+                updateMasterCheckbox();
+            });
+
+            // Delete selected functionality
+            $('#deleteSelected').click(function() {
+                const selectedUsers = $('.user-checkbox:checked');
+                if (selectedUsers.length === 0) return;
+
+                if (confirm(`هل أنت متأكد من حذف ${selectedUsers.length} مستخدم؟\n\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+                    selectedUsers.each(function() {
+                        deleteUser($(this).val());
+                    });
+                }
+            });
+        });
+
+        function updateDeleteButton() {
+            const selectedCount = $('.user-checkbox:checked').length;
+            $('#deleteSelected').prop('disabled', selectedCount === 0);
+        }
+
+        function updateMasterCheckbox() {
+            const totalCheckboxes = $('.user-checkbox').length;
+            const checkedCheckboxes = $('.user-checkbox:checked').length;
+
+            $('#masterCheckbox').prop('checked', totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes);
+            $('#masterCheckbox').prop('indeterminate', checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes);
+        }
+
+        function deleteUser(userId) {
+            $.post('@Url.Action("Delete")', {
+                id: userId,
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            })
+            .done(function(response) {
+                if (response.success) {
+                    $(`tr[data-user-id="${userId}"]`).fadeOut(function() {
+                        $(this).remove();
+                        updateDeleteButton();
+                        updateMasterCheckbox();
+                    });
+                    showNotification(response.message, 'success');
+                } else {
+                    showNotification(response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('حدث خطأ في الاتصال', 'error');
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' :
+                              type === 'error' ? 'alert-danger' :
+                              'alert-info';
+
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            $('body').append(notification);
+
+            setTimeout(function() {
+                notification.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        // Enhanced search functionality
+        let searchTimeout;
+        $('input[name="search"]').on('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = $(this).val();
+
+            searchTimeout = setTimeout(function() {
+                if (searchTerm.length >= 3 || searchTerm.length === 0) {
+                    $('form').submit();
+                }
+            }, 500);
+        });
+
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                location.reload();
+            }
+        }, 300000);
+    </script>
+}
+
+@section Styles {
+    <style>
+        .avatar-sm {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #5a5c69;
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.75em;
+            padding: 0.35em 0.65em;
+        }
+
+        .status-toggle {
+            cursor: pointer;
+        }
+
+        .page-link {
+            color: #007bff;
+        }
+
+        .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .text-decoration-none:hover {
+            text-decoration: underline !important;
+        }
+
+        @@media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .avatar-sm {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            .btn-group-sm > .btn {
+                padding: 0.125rem 0.25rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+}
+
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()

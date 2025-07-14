@@ -1,0 +1,33 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.CreateUserViewModel
+
+<div class="form-section mb-4">
+    <h6 class="section-title text-primary mb-3">
+        <i class="fas fa-user me-2"></i>المعلومات الشخصية
+    </h6>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FirstName" class="form-label required">الاسم الأول</label>
+            <input asp-for="FirstName" class="form-control" placeholder="أدخل الاسم الأول" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="LastName" class="form-label required">اسم العائلة</label>
+            <input asp-for="LastName" class="form-control" placeholder="أدخل اسم العائلة" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FirstNameEn" class="form-label">الاسم الأول (إنجليزي)</label>
+            <input asp-for="FirstNameEn" class="form-control" placeholder="First Name" />
+            <span asp-validation-for="FirstNameEn" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="LastNameEn" class="form-label">اسم العائلة (إنجليزي)</label>
+            <input asp-for="LastNameEn" class="form-control" placeholder="Last Name" />
+            <span asp-validation-for="LastNameEn" class="text-danger"></span>
+        </div>
+    </div>
+</div>

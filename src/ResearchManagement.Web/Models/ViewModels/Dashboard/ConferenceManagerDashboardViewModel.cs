@@ -21,7 +21,7 @@ namespace ResearchManagement.Web.Models.ViewModels.Dashboard
         public int CompletedReviews { get; set; }
         public double AverageReviewTime { get; set; }
         public List<Domain.Entities.Research> RecentSubmissions { get; set; } = new();
-        public List<User> RecentUsers { get; set; } = new();
+        public List<Domain.Entities.User> RecentUsers { get; set; } = new();
         public List<TrackStatistic> TrackStatistics { get; set; } = new();
 
         // خصائص محسوبة للإحصائيات

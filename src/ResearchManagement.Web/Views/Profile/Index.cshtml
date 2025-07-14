@@ -1,0 +1,577 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.User.UserProfileViewModel
+@{
+    ViewData["Title"] = "الملف الشخصي";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-user-circle me-2 text-primary"></i>الملف الشخصي</h2>
+                <p class="text-muted mb-0">عرض وإدارة معلوماتك الشخصية</p>
+            </div>
+            <div>
+                <a asp-action="Edit" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>تحديث الملف الشخصي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <!-- Profile Avatar -->
+                <div class="avatar-xl mx-auto mb-4">
+                    <div class="avatar-title bg-primary text-white rounded-circle fs-1">
+                        @Model.User.FirstName.Substring(0, 1)@Model.User.LastName.Substring(0, 1)
+                    </div>
+                </div>
+
+                <!-- Basic Info -->
+                <h3 class="mb-1">@Model.User.FullName</h3>
+                @if (!string.IsNullOrEmpty(Model.User.FullNameEn))
+                {
+                    <p class="text-muted mb-2">@Model.User.FullNameEn</p>
+                }
+
+                <!-- Role Badge -->
+                <span class="badge bg-@GetRoleColorClass(Model.User.Role) fs-6 mb-3">
+                    @GetRoleDisplayName(Model.User.Role)
+                </span>
+
+                <!-- Contact Information -->
+                <div class="text-start mt-4">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope text-primary me-3 fs-5"></i>
+                            <div>
+                                <div class="fw-bold">البريد الإلكتروني</div>
+                                <a href="mailto:@Model.User.Email" class="text-decoration-none">@Model.User.Email</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.User.Institution))
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-building text-primary me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-bold">المؤسسة</div>
+                                    <div>@Model.User.Institution</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.User.AcademicDegree))
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-graduation-cap text-primary me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-bold">الدرجة العلمية</div>
+                                    <div>@Model.User.AcademicDegree</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.User.OrcidId))
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-id-card text-primary me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-bold">معرف ORCID</div>
+                                    <a href="https://orcid.org/@Model.User.OrcidId" target="_blank" class="text-decoration-none">
+                                        @Model.User.OrcidId <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Account Info -->
+                <div class="text-start mt-4 pt-3 border-top">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="fw-bold">عضو منذ</div>
+                                <small class="text-muted">@Model.User.CreatedAt.ToString("MMMM yyyy")</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold">آخر نشاط</div>
+                            <small class="text-muted">
+                                @if (Model.ActivityStats.LastActivity.HasValue)
+                                {
+                                    @GetRelativeTime(Model.ActivityStats.LastActivity.Value)
+                                }
+                                else
+                                {
+                                    <span>لا يوجد نشاط</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="d-grid gap-2 mt-4">
+                    <a asp-action="Edit" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>تحديث المعلومات
+                    </a>
+                    <a asp-action="ChangePassword" class="btn btn-outline-warning">
+                        <i class="fas fa-key me-2"></i>تغيير كلمة المرور
+                    </a>
+                    <a asp-action="Security" class="btn btn-outline-secondary">
+                        <i class="fas fa-shield-alt me-2"></i>إعدادات الأمان
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics and Activity -->
+    <div class="col-lg-8">
+        <!-- Activity Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>إحصائيات النشاط</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 bg-primary bg-opacity-10 rounded">
+                            <i class="fas fa-file-alt text-primary fs-1 mb-2"></i>
+                            <h4 class="text-primary mb-1">@Model.ActivityStats.TotalResearches</h4>
+                            <small class="text-muted">البحوث المقدمة</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 bg-success bg-opacity-10 rounded">
+                            <i class="fas fa-check-circle text-success fs-1 mb-2"></i>
+                            <h4 class="text-success mb-1">@Model.ActivityStats.AcceptedResearches</h4>
+                            <small class="text-muted">البحوث المقبولة</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 bg-info bg-opacity-10 rounded">
+                            <i class="fas fa-clipboard-check text-info fs-1 mb-2"></i>
+                            <h4 class="text-info mb-1">@Model.ActivityStats.CompletedReviews</h4>
+                            <small class="text-muted">المراجعات المكتملة</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 bg-warning bg-opacity-10 rounded">
+                            <i class="fas fa-star text-warning fs-1 mb-2"></i>
+                            <h4 class="text-warning mb-1">@Model.ActivityStats.AverageReviewScore.ToString("F1")</h4>
+                            <small class="text-muted">متوسط التقييم</small>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.ActivityStats.TotalResearches > 0 || Model.ActivityStats.CompletedReviews > 0)
+                {
+                    <hr>
+                    <div class="row">
+                        @if (Model.ActivityStats.TotalResearches > 0)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <h6 class="mb-2">توزيع البحوث</h6>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>مقبولة</small>
+                                        <small>@Model.ActivityStats.AcceptedResearches / @Model.ActivityStats.TotalResearches</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success"
+                                             style="width: @((double)Model.ActivityStats.AcceptedResearches / Model.ActivityStats.TotalResearches * 100)%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>مرفوضة</small>
+                                        <small>@Model.ActivityStats.RejectedResearches / @Model.ActivityStats.TotalResearches</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-danger"
+                                             style="width: @((double)Model.ActivityStats.RejectedResearches / Model.ActivityStats.TotalResearches * 100)%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>معلقة</small>
+                                        <small>@Model.ActivityStats.PendingResearches / @Model.ActivityStats.TotalResearches</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-warning"
+                                             style="width: @((double)Model.ActivityStats.PendingResearches / Model.ActivityStats.TotalResearches * 100)%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.ActivityStats.TotalReviews > 0)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <h6 class="mb-2">أداء المراجعات</h6>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>مكتملة</small>
+                                        <small>@Model.ActivityStats.CompletedReviews / @Model.ActivityStats.TotalReviews</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success"
+                                             style="width: @((double)Model.ActivityStats.CompletedReviews / Model.ActivityStats.TotalReviews * 100)%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>معلقة</small>
+                                        <small>@Model.ActivityStats.PendingReviews / @Model.ActivityStats.TotalReviews</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-warning"
+                                             style="width: @((double)Model.ActivityStats.PendingReviews / Model.ActivityStats.TotalReviews * 100)%"></div>
+                                    </div>
+                                </div>
+                                @if (Model.ActivityStats.OverdueReviews > 0)
+                                {
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small>متأخرة</small>
+                                            <small>@Model.ActivityStats.OverdueReviews / @Model.ActivityStats.TotalReviews</small>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-danger"
+                                                 style="width: @((double)Model.ActivityStats.OverdueReviews / Model.ActivityStats.TotalReviews * 100)%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>الأنشطة الأخيرة</h5>
+                <a asp-action="Activity" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-list me-1"></i>عرض جميع الأنشطة
+                </a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentActivities.Any())
+                {
+                    <div class="timeline">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-@activity.StatusClass">
+                                    <i class="@activity.Icon text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">@activity.Title</h6>
+                                            <p class="text-muted mb-1">@activity.Description</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                @GetRelativeTime(activity.CreatedAt)
+                                            </small>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(activity.ActionUrl))
+                                        {
+                                            <a href="@activity.ActionUrl" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-arrow-left me-1"></i>عرض
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">لا توجد أنشطة حديثة</h6>
+                        <p class="text-muted mb-0">ابدأ بتقديم بحث أو مراجعة لرؤية نشاطك هنا</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "باحث",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "مقيم",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "مدير تراك",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "مدير المؤتمر",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "مدير النظام",
+            _ => role.ToString()
+        };
+    }
+
+    private string GetRoleColorClass(ResearchManagement.Domain.Enums.UserRole role)
+    {
+        return role switch
+        {
+            ResearchManagement.Domain.Enums.UserRole.Researcher => "primary",
+            ResearchManagement.Domain.Enums.UserRole.Reviewer => "info",
+            ResearchManagement.Domain.Enums.UserRole.TrackManager => "warning",
+            ResearchManagement.Domain.Enums.UserRole.ConferenceManager => "success",
+            ResearchManagement.Domain.Enums.UserRole.SystemAdmin => "danger",
+            _ => "secondary"
+        };
+    }
+
+    private string GetRelativeTime(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "الآن";
+        if (timeSpan.TotalMinutes < 60)
+            return $"منذ {(int)timeSpan.TotalMinutes} دقيقة";
+        if (timeSpan.TotalHours < 24)
+            return $"منذ {(int)timeSpan.TotalHours} ساعة";
+        if (timeSpan.TotalDays < 7)
+            return $"منذ {(int)timeSpan.TotalDays} يوم";
+        if (timeSpan.TotalDays < 30)
+            return $"منذ {(int)(timeSpan.TotalDays / 7)} أسبوع";
+        if (timeSpan.TotalDays < 365)
+            return $"منذ {(int)(timeSpan.TotalDays / 30)} شهر";
+
+        return $"منذ {(int)(timeSpan.TotalDays / 365)} سنة";
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Animate statistics on page load
+            animateCounters();
+
+            // Add tooltips to progress bars
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Auto-refresh activity statistics every 5 minutes
+            setInterval(function() {
+                if (document.visibilityState === 'visible') {
+                    refreshActivityStats();
+                }
+            }, 300000);
+        });
+
+        function animateCounters() {
+            $('.card .text-primary, .card .text-success, .card .text-info, .card .text-warning').each(function(index) {
+                const $this = $(this);
+                const finalValue = parseFloat($this.text()) || 0;
+
+                setTimeout(function() {
+                    $({ countNum: 0 }).animate({
+                        countNum: finalValue
+                    }, {
+                        duration: 1500,
+                        easing: 'swing',
+                        step: function() {
+                            if (finalValue % 1 === 0) {
+                                $this.text(Math.floor(this.countNum));
+                            } else {
+                                $this.text(this.countNum.toFixed(1));
+                            }
+                        },
+                        complete: function() {
+                            if (finalValue % 1 === 0) {
+                                $this.text(finalValue);
+                            } else {
+                                $this.text(finalValue.toFixed(1));
+                            }
+                        }
+                    });
+                }, index * 200);
+            });
+        }
+
+        function refreshActivityStats() {
+            $.get('@Url.Action("GetActivityStats")')
+                .done(function(data) {
+                    if (data.success) {
+                        updateStatsDisplay(data.stats);
+                    }
+                })
+                .fail(function() {
+                    console.log('فشل في تحديث الإحصائيات');
+                });
+        }
+
+        function updateStatsDisplay(stats) {
+            // Update statistics values with animation
+            $('.text-primary h4').text(stats.totalResearches);
+            $('.text-success h4').text(stats.acceptedResearches);
+            $('.text-info h4').text(stats.completedReviews);
+            $('.text-warning h4').text(stats.averageReviewScore.toFixed(1));
+
+            // Update progress bars
+            updateProgressBars(stats);
+        }
+
+        function updateProgressBars(stats) {
+            if (stats.totalResearches > 0) {
+                $('.progress-bar.bg-success').css('width',
+                    (stats.acceptedResearches / stats.totalResearches * 100) + '%');
+                $('.progress-bar.bg-danger').css('width',
+                    (stats.rejectedResearches / stats.totalResearches * 100) + '%');
+                $('.progress-bar.bg-warning').css('width',
+                    (stats.pendingResearches / stats.totalResearches * 100) + '%');
+            }
+
+            if (stats.totalReviews > 0) {
+                $('.progress-bar.bg-success').eq(1).css('width',
+                    (stats.completedReviews / stats.totalReviews * 100) + '%');
+                $('.progress-bar.bg-warning').eq(1).css('width',
+                    (stats.pendingReviews / stats.totalReviews * 100) + '%');
+            }
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .avatar-xl {
+            width: 6rem;
+            height: 6rem;
+        }
+
+        .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            transition: transform 0.2s ease-in-out;
+        }
+
+            .card:hover {
+                transform: translateY(-2px);
+            }
+
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+            .timeline::before {
+                content: '';
+                position: absolute;
+                left: 15px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: #e9ecef;
+            }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e9ecef;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #dee2e6;
+        }
+
+        .border-end {
+            border-right: 1px solid #dee2e6 !important;
+        }
+
+        .progress {
+            height: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .bg-opacity-10 {
+            background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+        }
+
+        .fs-6 {
+            font-size: 1rem !important;
+        }
+
+        .text-decoration-none:hover {
+            text-decoration: underline !important;
+        }
+
+        @@media (max-width: 768px) {
+            .avatar-xl
+
+        {
+            width: 4.5rem;
+            height: 4.5rem;
+        }
+
+        .timeline {
+            padding-left: 20px;
+        }
+
+        .timeline-marker {
+            left: -15px;
+            width: 25px;
+            height: 25px;
+        }
+
+        .border-end {
+            border-right: none !important;
+            border-bottom: 1px solid #dee2e6 !important;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        }
+    </style>
+}

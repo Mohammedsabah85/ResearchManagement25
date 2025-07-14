@@ -1,0 +1,742 @@
+﻿// _CreateUserScripts.cshtml
+<script>
+class CreateUserForm {
+    constructor() {
+        this.form = document.getElementById('createUserForm');
+        this.initializeEventListeners();
+        this.initializeValidation();
+    }
+
+    initializeEventListeners() {
+        // Password functionality
+        document.getElementById('generatePassword')?.addEventListener('click', () => this.generatePassword());
+        document.getElementById('togglePassword')?.addEventListener('click', () => this.togglePasswordVisibility());
+        
+        // Form actions
+        document.getElementById('clearForm')?.addEventListener('click', () => this.clearForm());
+        document.getElementById('previewBtn')?.addEventListener('click', () => this.showPreview());
+        document.getElementById('confirmCreate')?.addEventListener('click', () => this.submitForm());
+        
+        // Real-time validation
+        document.getElementById('Email')?.addEventListener('blur', (e) => this.validateEmail(e.target.value));
+        document.getElementById('Password')?.addEventListener('input', (e) => this.updatePasswordStrength(e.target.value));
+        
+        // Role-based visibility
+        document.getElementById('Role')?.addEventListener('change', (e) => this.handleRoleChange(e.target.value));
+        
+        // Form submission
+        this.form?.addEventListener('submit', (e) => this.handleFormSubmit(e));
+    }
+
+    initializeValidation() {
+        // Add real-time validation for required fields
+        const requiredFields = ['FirstName', 'LastName', 'Email', 'Password', 'ConfirmPassword', 'Role'];
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (field) {
+                field.addEventListener('blur', () => this.validateRequiredField(field));
+                field.addEventListener('input', () => this.clearFieldError(field));
+            }
+        });
+
+        // Password confirmation validation
+        document.getElementById('ConfirmPassword')?.addEventListener('input', () => this.validatePasswordConfirmation());
+    }
+
+    // Password Management
+    generatePassword(length = 12) {
+        const charset = {
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            numbers: '0123456789',
+            symbols: '(!@#$%^&*)'
+        };
+
+        const allChars = Object.values(charset).join('');
+        let password = '';
+
+        // Ensure at least one character from each category
+        Object.values(charset).forEach(chars => {
+            password += chars[Math.floor(Math.random() * chars.length)];
+        });
+
+        // Fill remaining length
+        for (let i = 4; i < length; i++) {
+            password += allChars[Math.floor(Math.random() * allChars.length)];
+        }
+
+        // Shuffle password
+        password = password.split('').sort(() => Math.random() - 0.5).join('');
+
+        // Set password fields
+        const passwordField = document.getElementById('Password');
+        const confirmField = document.getElementById('ConfirmPassword');
+        
+        if (passwordField && confirmField) {
+            passwordField.value = password;
+            confirmField.value = password;
+            this.updatePasswordStrength(password);
+            this.showNotification('تم إنشاء كلمة مرور قوية', 'success');
+        }
+
+        return password;
+    }
+
+    togglePasswordVisibility() {
+        const passwordField = document.getElementById('Password');
+        const confirmField = document.getElementById('ConfirmPassword');
+        const toggleBtn = document.getElementById('togglePassword');
+        const icon = toggleBtn?.querySelector('i');
+
+        if (passwordField && confirmField && icon) {
+            const isPassword = passwordField.type === 'password';
+            
+            passwordField.type = isPassword ? 'text' : 'password';
+            confirmField.type = isPassword ? 'text' : 'password';
+            
+            icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+    }
+
+    updatePasswordStrength(password) {
+        const strengthIndicator = document.getElementById('passwordStrength');
+        if (!strengthIndicator) return;
+
+        const strength = this.calculatePasswordStrength(password);
+        const strengthClasses = ['weak', 'fair', 'good', 'strong'];
+        const strengthTexts = ['ضعيفة', 'متوسطة', 'جيدة', 'قوية'];
+
+        strengthIndicator.className = `password-strength ${strengthClasses[strength.level]}`;
+        strengthIndicator.innerHTML = `
+            <div class="strength-bar">
+                <div class="strength-fill" style="width: ${(strength.level + 1) * 25}%"></div>
+            </div>
+            <small>قوة كلمة المرور: ${strengthTexts[strength.level]}</small>
+        `;
+    }
+
+    calculatePasswordStrength(password) {
+        let score = 0;
+        const checks = [
+            password.length >= 8,
+            /[a-z]/.test(password),
+            /[A-Z]/.test(password),
+            /[0-9]/.test(password),
+            /[^A-Za-z0-9]/.test(password)
+        ];
+
+        score = checks.filter(check => check).length;
+        
+        return {
+            level: Math.min(3, Math.max(0, score - 1)),
+            score: score
+        };
+    }
+
+    // Validation
+    validateRequiredField(field) {
+        const value = field.value.trim();
+        if (!value) {
+            this.showFieldError(field, 'هذا الحقل مطلوب');
+            return false;
+        }
+        this.clearFieldError(field);
+        return true;
+    }
+
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailField = document.getElementById('Email');
+        
+        if (email && !emailRegex.test(email)) {
+            this.showFieldError(emailField, 'تنسيق البريد الإلكتروني غير صحيح');
+            return false;
+        }
+        
+        if (email) {
+            this.checkEmailAvailability(email);
+        }
+        
+        return true;
+    }
+
+    validatePasswordConfirmation() {
+        const password = document.getElementById('Password')?.value;
+        const confirmPassword = document.getElementById('ConfirmPassword')?.value;
+        const confirmField = document.getElementById('ConfirmPassword');
+
+        if (password && confirmPassword && password !== confirmPassword) {
+            this.showFieldError(confirmField, 'كلمة المرور وتأكيد كلمة المرور غير متطابقين');
+            return false;
+        }
+        
+        if (confirmPassword) {
+            this.clearFieldError(confirmField);
+        }
+        return true;
+    }
+
+    validateForm() {
+        let isValid = true;
+        this.clearAllErrors();
+
+        // Validate required fields
+        const requiredFields = ['FirstName', 'LastName', 'Email', 'Password', 'ConfirmPassword', 'Role'];
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (field && !this.validateRequiredField(field)) {
+                isValid = false;
+            }
+        });
+
+        // Validate email format
+        const emailField = document.getElementById('Email');
+        if (emailField && !this.validateEmail(emailField.value)) {
+            isValid = false;
+        }
+
+        // Validate password confirmation
+        if (!this.validatePasswordConfirmation()) {
+            isValid = false;
+        }
+
+        // Validate password strength
+        const password = document.getElementById('Password')?.value;
+        if (password && password.length < 6) {
+            this.showFieldError(document.getElementById('Password'), 'كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Error Handling
+    showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        const errorElement = field.parentElement.querySelector('.text-danger') || 
+                           field.nextElementSibling;
+        if (errorElement && errorElement.classList.contains('text-danger')) {
+            errorElement.textContent = message;
+        }
+    }
+
+    clearFieldError(field) {
+        field.classList.remove('is-invalid');
+        const errorElement = field.parentElement.querySelector('.text-danger') || 
+                           field.nextElementSibling;
+        if (errorElement && errorElement.classList.contains('text-danger')) {
+            errorElement.textContent = '';
+        }
+    }
+
+    clearAllErrors() {
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.text-danger').forEach(error => {
+            error.textContent = '';
+        });
+    }
+
+    // Form Actions
+    clearForm() {
+        if (confirm('هل أنت متأكد من مسح جميع البيانات المدخلة؟')) {
+            this.form.reset();
+            this.clearAllErrors();
+            document.getElementById('passwordStrength').innerHTML = '';
+        }
+    }
+
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        if (this.validateForm()) {
+            this.showPreview();
+        } else {
+            this.showNotification('يرجى تصحيح الأخطاء المطلوبة', 'error');
+            this.scrollToFirstError();
+        }
+    }
+
+    scrollToFirstError() {
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+    }
+
+    // Preview and Submission
+    showPreview() {
+        const formData = this.collectFormData();
+        const previewHtml = this.generatePreviewHtml(formData);
+        
+        document.getElementById('previewContent').innerHTML = previewHtml;
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+    }
+
+    collectFormData() {
+        return {
+            firstName: document.getElementById('FirstName')?.value || '',
+            lastName: document.getElementById('LastName')?.value || '',
+            firstNameEn: document.getElementById('FirstNameEn')?.value || '',
+            lastNameEn: document.getElementById('LastNameEn')?.value || '',
+            email: document.getElementById('Email')?.value || '',
+            role: document.querySelector('#Role option:checked')?.textContent || '',
+            institution: document.getElementById('Institution')?.value || '',
+            academicDegree: document.getElementById('AcademicDegree')?.value || '',
+            orcidId: document.getElementById('OrcidId')?.value || '',
+            isActive: document.getElementById('IsActive')?.checked || false,
+            emailConfirmed: document.getElementById('EmailConfirmed')?.checked || false
+        };
+    }
+
+    generatePreviewHtml(data) {
+        return `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">المعلومات الشخصية</h6>
+                    <p><strong>الاسم:</strong> ${data.firstName} ${data.lastName}</p>
+                    ${data.firstNameEn ? `<p><strong>الاسم (إنجليزي):</strong> ${data.firstNameEn} ${data.lastNameEn}</p>` : ''}
+                    <p><strong>البريد الإلكتروني:</strong> ${data.email}</p>
+                    <p><strong>الدور:</strong> ${data.role}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-primary">المعلومات الأكاديمية</h6>
+                    ${data.institution ? `<p><strong>المؤسسة:</strong> ${data.institution}</p>` : '<p class="text-muted">لم يتم تحديد مؤسسة</p>'}
+                    ${data.academicDegree ? `<p><strong>الدرجة العلمية:</strong> ${data.academicDegree}</p>` : '<p class="text-muted">لم يتم تحديد درجة علمية</p>'}
+                    ${data.orcidId ? `<p><strong>معرف ORCID:</strong> ${data.orcidId}</p>` : '<p class="text-muted">لا يوجد معرف ORCID</p>'}
+                </div>
+                <div class="col-12 mt-3">
+                    <h6 class="text-primary">إعدادات الحساب</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>تفعيل الحساب:</strong> 
+                                <span class="badge ${data.isActive ? 'bg-success' : 'bg-secondary'}">${data.isActive ? 'مفعل' : 'غير مفعل'}</span>
+                            </p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>تأكيد البريد الإلكتروني:</strong> 
+                                <span class="badge ${data.emailConfirmed ? 'bg-success' : 'bg-warning'}">${data.emailConfirmed ? 'مؤكد' : 'غير مؤكد'}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    submitForm() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+        modal.hide();
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جار الإنشاء...';
+        submitBtn.disabled = true;
+
+        // Submit form
+        this.form.submit();
+    }
+
+    // Utility Methods
+    async checkEmailAvailability(email) {
+        try {
+            const response = await fetch(`/api/users/check-email?email=${encodeURIComponent(email)}`);
+            const result = await response.json();
+            
+            if (!result.available) {
+                this.showFieldError(document.getElementById('Email'), 'البريد الإلكتروني مستخدم بالفعل');
+            }
+        } catch (error) {
+            console.warn('Failed to check email availability:', error);
+        }
+    }
+
+    handleRoleChange(role) {
+        // Handle role-specific field visibility
+        const academicFields = document.querySelectorAll('[data-academic-field]');
+        const showAcademicFields = ['researcher', 'professor', 'student'].includes(role.toLowerCase());
+        
+        academicFields.forEach(field => {
+            field.style.display = showAcademicFields ? 'block' : 'none';
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        // Create and show notification
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // ORCID validation
+    validateOrcidFormat(orcidId) {
+        const orcidPattern = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
+        return orcidPattern.test(orcidId);
+    }
+
+    // Auto-format ORCID input
+    formatOrcidInput(input) {
+        let value = input.value.replace(/\D/g, ''); // Remove non-digits
+        
+        if (value.length > 0) {
+            value = value.match(/.{1,4}/g).join('-');
+            if (value.length > 19) { // Max length: 0000-0000-0000-0000
+                value = value.substring(0, 19);
+            }
+        }
+        
+        input.value = value;
+        
+        // Validate format
+        if (value && !this.validateOrcidFormat(value)) {
+            this.showFieldError(input, 'تنسيق معرف ORCID غير صحيح (0000-0000-0000-0000)');
+        } else {
+            this.clearFieldError(input);
+        }
+    }
+
+    // Enhanced initialization for ORCID
+    initializeOrcidField() {
+        const orcidField = document.getElementById('OrcidId');
+        if (orcidField) {
+            orcidField.addEventListener('input', () => this.formatOrcidInput(orcidField));
+            orcidField.addEventListener('paste', (e) => {
+                setTimeout(() => this.formatOrcidInput(orcidField), 0);
+            });
+        }
+    }
+
+    // Enhanced email validation with domain suggestions
+    suggestEmailDomains(email) {
+        const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'edu.iq', 'ac.uk'];
+        const typedDomain = email.split('@')[1];
+        
+        if (typedDomain && typedDomain.length > 2) {
+            const suggestions = commonDomains.filter(domain => 
+                domain.includes(typedDomain) || this.levenshteinDistance(domain, typedDomain) <= 2
+            );
+            
+            if (suggestions.length > 0) {
+                this.showEmailSuggestions(suggestions, email);
+            }
+        }
+    }
+
+    levenshteinDistance(str1, str2) {
+        const matrix = [];
+        for (let i = 0; i <= str2.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= str1.length; j++) {
+            matrix[0][j] = j;
+        }
+        for (let i = 1; i <= str2.length; i++) {
+            for (let j = 1; j <= str1.length; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+        return matrix[str2.length][str1.length];
+    }
+
+    showEmailSuggestions(suggestions, currentEmail) {
+        const emailField = document.getElementById('Email');
+        const existingSuggestions = document.getElementById('emailSuggestions');
+        
+        if (existingSuggestions) {
+            existingSuggestions.remove();
+        }
+
+        const suggestionsDiv = document.createElement('div');
+        suggestionsDiv.id = 'emailSuggestions';
+        suggestionsDiv.className = 'email-suggestions mt-1';
+        suggestionsDiv.innerHTML = `
+            <small class="text-muted">هل تقصد:</small>
+            ${suggestions.map(domain => {
+                const suggestedEmail = currentEmail.split('@')[0] + '@' + domain;
+                return `<button type="button" class="btn btn-link btn-sm p-0 ms-2" onclick="document.getElementById('Email').value='${suggestedEmail}'; this.parentElement.remove();">${suggestedEmail}</button>`;
+            }).join('')}
+        `;
+
+        emailField.parentElement.appendChild(suggestionsDiv);
+        
+        // Remove suggestions after 10 seconds
+        setTimeout(() => {
+            if (suggestionsDiv.parentNode) {
+                suggestionsDiv.remove();
+            }
+        }, 10000);
+    }
+}
+
+// Utility class for form enhancements
+class FormEnhancements {
+    static addLoadingState(button, loadingText = 'جار المعالجة...') {
+        const originalText = button.innerHTML;
+        button.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${loadingText}`;
+        button.disabled = true;
+        
+        return () => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        };
+    }
+
+    static addTooltips() {
+        // Initialize Bootstrap tooltips
+        const tooltipElements = document.querySelectorAll('[title]');
+        tooltipElements.forEach(element => {
+            new bootstrap.Tooltip(element);
+        });
+    }
+
+    static addKeyboardShortcuts(form) {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+            
+            // Ctrl+R to reset
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                const clearBtn = document.getElementById('clearForm');
+                if (clearBtn) clearBtn.click();
+            }
+            
+            // Escape to cancel
+            if (e.key === 'Escape') {
+                const cancelBtn = document.querySelector('a[asp-action="Index"]');
+                if (cancelBtn && !document.querySelector('.modal.show')) {
+                    if (confirm('هل تريد إلغاء العملية والعودة للقائمة؟')) {
+                        window.location.href = cancelBtn.href;
+                    }
+                }
+            }
+        });
+    }
+
+    static addAutoSave(form, interval = 30000) {
+        const autoSaveKey = 'createUser_autoSave';
+        
+        // Load saved data on page load
+        const savedData = localStorage.getItem(autoSaveKey);
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                Object.keys(data).forEach(key => {
+                    const field = document.getElementById(key);
+                    if (field) {
+                        if (field.type === 'checkbox') {
+                            field.checked = data[key];
+                        } else {
+                            field.value = data[key];
+                        }
+                    }
+                });
+                
+                // Show restore notification
+                if (confirm('تم العثور على بيانات محفوظة. هل تريد استعادتها؟')) {
+                    // Data already loaded above
+                } else {
+                    localStorage.removeItem(autoSaveKey);
+                }
+            } catch (error) {
+                console.warn('Failed to restore auto-saved data:', error);
+                localStorage.removeItem(autoSaveKey);
+            }
+        }
+
+        // Auto-save periodically
+        setInterval(() => {
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (const [key, value] of formData.entries()) {
+                const field = document.getElementById(key);
+                if (field) {
+                    data[key] = field.type === 'checkbox' ? field.checked : value;
+                }
+            }
+            
+            localStorage.setItem(autoSaveKey, JSON.stringify(data));
+        }, interval);
+
+        // Clear auto-save on successful submission
+        form.addEventListener('submit', () => {
+            localStorage.removeItem(autoSaveKey);
+        });
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const createUserForm = new CreateUserForm();
+    
+    // Add enhancements
+    FormEnhancements.addTooltips();
+    FormEnhancements.addKeyboardShortcuts(createUserForm.form);
+    FormEnhancements.addAutoSave(createUserForm.form);
+    
+    // Initialize ORCID field
+    createUserForm.initializeOrcidField();
+    
+    // Enhanced email field with suggestions
+    const emailField = document.getElementById('Email');
+    if (emailField) {
+        emailField.addEventListener('input', (e) => {
+            const email = e.target.value;
+            if (email.includes('@') && email.split('@')[1]) {
+                createUserForm.suggestEmailDomains(email);
+            }
+        });
+    }
+    
+    console.log('Create User Form initialized successfully');
+});
+</script>
+
+<!-- Additional CSS for enhanced styling -->
+<style>
+.form-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid var(--bs-primary);
+}
+
+.section-title {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.password-strength {
+    margin-top: 5px;
+}
+
+.strength-bar {
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.password-strength.weak .strength-fill {
+    background-color: #dc3545;
+}
+
+.password-strength.fair .strength-fill {
+    background-color: #fd7e14;
+}
+
+.password-strength.good .strength-fill {
+    background-color: #ffc107;
+}
+
+.password-strength.strong .strength-fill {
+    background-color: #198754;
+}
+
+.email-suggestions {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-actions {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    border-top: 2px solid #e9ecef;
+}
+
+.btn-group-toggle .btn {
+    margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+    .form-actions .d-flex {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-actions .d-flex > div {
+        text-align: center;
+    }
+}
+
+/* RTL Support */
+[dir="rtl"] .form-section {
+    border-left: none;
+    border-right: 4px solid var(--bs-primary);
+}
+
+/* Accessibility improvements */
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.5);
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Enhanced modal */
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.modal-footer {
+    border-top: 2px solid #e9ecef;
+}
+</style>
