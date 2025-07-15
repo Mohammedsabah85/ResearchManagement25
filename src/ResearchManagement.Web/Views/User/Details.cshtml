@@ -236,7 +236,7 @@
                 <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>معلومات النظام</h5>
             </div>
             <div class="card-body">
-                <div class="row">
+            @*     <div class="row">
                     <div class="col-sm-6 mb-3">
                         <strong>تم الإنشاء بواسطة:</strong>
                         <p class="mb-0">@(Model.User.CreatedBy ?? "النظام")</p>
@@ -253,7 +253,7 @@
                             <p class="mb-0 text-muted">لم يتم التحديث</p>
                         }
                     </div>
-                </div>
+                </div> *@
                 
                 <!-- Additional Actions -->
                 <div class="mt-3">
@@ -326,6 +326,7 @@
     </div>
 </div>
 
+@* Helper methods moved to @code block instead of @functions *@
 @functions {
     private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
     {
@@ -357,83 +358,7 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Toggle user status
-            $('.toggle-status').click(function() {
-                const userId = $(this).data('user-id');
-                const currentStatus = $(this).data('current-status');
-                const button = $(this);
-                
-                const action = currentStatus ? 'إلغاء تفعيل' : 'تفعيل';
-                
-                if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
-                    $.post('@Url.Action("ToggleStatus")', {
-                        id: userId,
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                    })
-                    .done(function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            showNotification(response.message, 'error');
-                        }
-                    })
-                    .fail(function() {
-                        showNotification('حدث خطأ في الاتصال', 'error');
-                    });
-                }
-            });
 
-            // Generate random password
-            $('#generatePassword').click(function() {
-                const password = generateRandomPassword(8);
-                $('#newPassword, #confirmPassword').val(password);
-            });
-
-            // Toggle password visibility
-            $('#togglePassword').click(function() {
-                const passwordField = $('#newPassword');
-                const icon = $(this).find('i');
-                
-                if (passwordField.attr('type') === 'password') {
-                    passwordField.attr('type', 'text');
-                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
-                } else {
-                    passwordField.attr('type', 'password');
-                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
-                }
-            });
-
-            // Reset password form submission
-            $('#resetPasswordForm').submit(function(e) {
-                e.preventDefault();
-                
-                const newPassword = $('#newPassword').val();
-                const confirmPassword = $('#confirmPassword').val();
-                
-                if (newPassword !== confirmPassword) {
-                    showNotification('كلمة المرور وتأكيد كلمة المرور غير متطابقين', 'error');
-                    return;
-                }
-                
-                if (newPassword.length < 6) {
-                    showNotification('كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل', 'error');
-                    return;
-                }
-
-                // Here you would typically send the form data to the server
-                $('#resetPasswordModal').modal('hide');
-                showNotification('تم إعادة تعيين كلمة المرور بنجاح', 'success');
-            });
-        });
-
-        function generateRandomPassword(length) {
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-            let password = "";
-            for (let i = 0; i < length; i++) {
-                password += charset.charAt(Math.floor(Math.random() * charset.length));
-            }
-            return password;
-        }
 
         function showNotification(message, type = 'info') {
             const alertClass = type === 'success' ? 'alert-success' : 

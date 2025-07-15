@@ -7,6 +7,8 @@ using ResearchManagement.Application.Interfaces;
 using ResearchManagement.Web.Models.ViewModels.User;
 using ResearchManagement.Web.Models.ViewModels.Profile;
 using AutoMapper;
+using LoginAttemptViewModel = ResearchManagement.Web.Models.ViewModels.User.LoginAttemptViewModel;
+
 
 namespace ResearchManagement.Web.Controllers
 {

@@ -346,6 +346,7 @@
     </div>
 </div>
 
+@* Helper methods moved to @code block *@
 @functions {
     private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
     {
@@ -596,19 +597,22 @@
         }
 
         @@media (max-width: 768px) {
-            .table-responsive {
-                font-size: 0.875rem;
-            }
+            .table-responsive
 
-            .avatar-sm {
-                width: 2rem;
-                height: 2rem;
-            }
+        {
+            font-size: 0.875rem;
+        }
 
-            .btn-group-sm > .btn {
-                padding: 0.125rem 0.25rem;
-                font-size: 0.7rem;
-            }
+        .avatar-sm {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .btn-group-sm > .btn {
+            padding: 0.125rem 0.25rem;
+            font-size: 0.7rem;
+        }
+
         }
     </style>
 }

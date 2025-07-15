@@ -42,7 +42,7 @@
                         <h6 class="section-title text-primary mb-3">
                             <i class="fas fa-user me-2"></i>المعلومات الشخصية
                         </h6>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="FirstName" class="form-label required">الاسم الأول</label>
@@ -75,7 +75,7 @@
                         <h6 class="section-title text-primary mb-3">
                             <i class="fas fa-envelope me-2"></i>معلومات الحساب
                         </h6>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Email" class="form-label required">البريد الإلكتروني</label>
@@ -127,7 +127,7 @@
                             <i class="fas fa-graduation-cap me-2"></i>المعلومات الأكاديمية
                             <small class="text-muted">(اختيارية)</small>
                         </h6>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Institution" class="form-label">المؤسسة التعليمية</label>
@@ -171,7 +171,7 @@
                         <h6 class="section-title text-primary mb-3">
                             <i class="fas fa-cogs me-2"></i>إعدادات الحساب
                         </h6>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <div class="form-check form-switch">
@@ -226,3 +226,5 @@
     </div>
 </div>
 
+@* Include the enhanced scripts partial *@
+<partial name="_CreateUserScripts" />

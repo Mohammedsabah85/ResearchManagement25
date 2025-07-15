@@ -8,6 +8,7 @@ using ResearchManagement.Domain.Enums;
 using ResearchManagement.Application.Interfaces;
 using ResearchManagement.Web.Models.ViewModels.User;
 using AutoMapper;
+using ResearchManagement.Infrastructure.Repositories;
 
 namespace ResearchManagement.Web.Controllers
 {
@@ -96,7 +97,7 @@ namespace ResearchManagement.Web.Controllers
             }
         }
 
-        // GET: User/Details/5
+        //GET: User/Details/5
         public async Task<IActionResult> Details(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -137,6 +138,9 @@ namespace ResearchManagement.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+        // في UserController.cs - تحديث Details Action
+
+        // GET: User/Details/5
 
         // GET: User/Create
         public IActionResult Create()
