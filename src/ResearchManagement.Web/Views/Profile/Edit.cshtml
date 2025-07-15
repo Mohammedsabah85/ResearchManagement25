@@ -1,0 +1,502 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.Profile.EditProfileViewModel
+@{
+    ViewData["Title"] = "تحديث الملف الشخصي";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-user-edit me-2 text-primary"></i>تحديث الملف الشخصي</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a asp-action="Index">الملف الشخصي</a></li>
+                        <li class="breadcrumb-item active">تحديث البيانات</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للملف الشخصي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>تحديث البيانات الشخصية</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" id="editProfileForm" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>المعلومات الشخصية
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label required">الاسم الأول</label>
+                                <input asp-for="FirstName" class="form-control" placeholder="أدخل الاسم الأول" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label required">اسم العائلة</label>
+                                <input asp-for="LastName" class="form-control" placeholder="أدخل اسم العائلة" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstNameEn" class="form-label">الاسم الأول (إنجليزي)</label>
+                                <input asp-for="FirstNameEn" class="form-control" placeholder="First Name" />
+                                <span asp-validation-for="FirstNameEn" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastNameEn" class="form-label">اسم العائلة (إنجليزي)</label>
+                                <input asp-for="LastNameEn" class="form-control" placeholder="Last Name" />
+                                <span asp-validation-for="LastNameEn" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title text-primary mb-3">
+                            <i class="fas fa-graduation-cap me-2"></i>المعلومات الأكاديمية
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Institution" class="form-label">المؤسسة التعليمية</label>
+                                <input asp-for="Institution" class="form-control" placeholder="اسم الجامعة أو المؤسسة" />
+                                <span asp-validation-for="Institution" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AcademicDegree" class="form-label">الدرجة العلمية</label>
+                                <select asp-for="AcademicDegree" class="form-select">
+                                    <option value="">اختر الدرجة العلمية</option>
+                                    <option value="بكالوريوس">بكالوريوس</option>
+                                    <option value="ماجستير">ماجستير</option>
+                                    <option value="دكتوراه">دكتوراه</option>
+                                    <option value="أستاذ مساعد">أستاذ مساعد</option>
+                                    <option value="أستاذ مشارك">أستاذ مشارك</option>
+                                    <option value="أستاذ">أستاذ</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                                <span asp-validation-for="AcademicDegree" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OrcidId" class="form-label">معرف ORCID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                    <input asp-for="OrcidId" class="form-control" placeholder="0000-0000-0000-0000" pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}" />
+                                    <a href="https://orcid.org/" target="_blank" class="btn btn-outline-secondary" title="ما هو ORCID؟">
+                                        <i class="fas fa-question-circle"></i>
+                                    </a>
+                                </div>
+                                <span asp-validation-for="OrcidId" class="text-danger"></span>
+                                <div class="form-text">معرف ORCID اختياري ولكن يُنصح به للباحثين</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title text-primary mb-3">
+                            <i class="fas fa-envelope me-2"></i>معلومات الاتصال
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">البريد الإلكتروني الحالي</label>
+                                <input type="email" class="form-control" value="@Model.CurrentEmail" readonly />
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    لتغيير البريد الإلكتروني، يرجى التواصل مع مدير النظام
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between flex-wrap gap-2">
+                                    <div>
+                                        <button type="button" class="btn btn-outline-secondary" id="resetForm">
+                                            <i class="fas fa-undo me-2"></i>إعادة تعيين
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info" id="previewChanges">
+                                            <i class="fas fa-eye me-2"></i>معاينة التغييرات
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <a asp-action="Index" class="btn btn-secondary me-2">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a>
+                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">معاينة التغييرات</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تعديل</button>
+                <button type="button" class="btn btn-primary" id="confirmSave">تأكيد الحفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Store original values for comparison
+            var originalValues = {};
+            $('#editProfileForm input, #editProfileForm select').each(function() {
+                originalValues[this.name] = $(this).val();
+            });
+
+            // ORCID formatting
+            $('#OrcidId').on('input', function() {
+                formatOrcidInput(this);
+            });
+
+            // Reset form
+            $('#resetForm').click(function() {
+                if (confirm('هل أنت متأكد من إعادة تعيين جميع البيانات إلى قيمها الأصلية؟')) {
+                    $('#editProfileForm')[0].reset();
+
+                    // Restore original values
+                    $.each(originalValues, function(name, value) {
+                        $('[name="' + name + '"]').val(value);
+                    });
+
+                    // Clear validation errors
+                    $('.is-invalid').removeClass('is-invalid');
+                    $('.text-danger').text('');
+
+                    showNotification('تم إعادة تعيين النموذج', 'info');
+                }
+            });
+
+            // Preview changes
+            $('#previewChanges').click(function() {
+                showPreview();
+            });
+
+            // Confirm save from modal
+            $('#confirmSave').click(function() {
+                $('#previewModal').modal('hide');
+                $('#editProfileForm').submit();
+            });
+
+            // Form validation
+            $('#editProfileForm').on('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    showNotification('يرجى تصحيح الأخطاء المطلوبة', 'error');
+                    scrollToFirstError();
+                }
+            });
+
+            // Real-time validation
+            $('#editProfileForm input, #editProfileForm select').on('blur', function() {
+                validateField($(this));
+            });
+
+            // Clear errors on input
+            $('#editProfileForm input, #editProfileForm select').on('input', function() {
+                clearFieldError($(this));
+            });
+        });
+
+        function formatOrcidInput(input) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digits
+
+            if (value.length > 0) {
+                value = value.match(/.{1,4}/g).join('-');
+                if (value.length > 19) { // Max length: 0000-0000-0000-0000
+                    value = value.substring(0, 19);
+                }
+            }
+
+            input.value = value;
+
+            // Validate format
+            const orcidPattern = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
+            if (value && !orcidPattern.test(value)) {
+                showFieldError($(input), 'تنسيق معرف ORCID غير صحيح (0000-0000-0000-0000)');
+            } else {
+                clearFieldError($(input));
+            }
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Validate required fields
+            $('#FirstName, #LastName').each(function() {
+                if (!validateField($(this))) {
+                    isValid = false;
+                }
+            });
+
+            // Validate ORCID format if provided
+            const orcidField = $('#OrcidId');
+            if (orcidField.val()) {
+                const orcidPattern = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
+                if (!orcidPattern.test(orcidField.val())) {
+                    showFieldError(orcidField, 'تنسيق معرف ORCID غير صحيح');
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+
+        function validateField($field) {
+            const value = $field.val().trim();
+            const isRequired = $field.hasClass('required') || $field.prev('label').hasClass('required');
+
+            if (isRequired && !value) {
+                showFieldError($field, 'هذا الحقل مطلوب');
+                return false;
+            }
+
+            clearFieldError($field);
+            return true;
+        }
+
+        function showFieldError($field, message) {
+            $field.addClass('is-invalid');
+            $field.siblings('.text-danger').text(message);
+        }
+
+        function clearFieldError($field) {
+            $field.removeClass('is-invalid');
+            $field.siblings('.text-danger').text('');
+        }
+
+        function scrollToFirstError() {
+            const firstError = $('.is-invalid').first();
+            if (firstError.length) {
+                $('html, body').animate({
+                    scrollTop: firstError.offset().top - 100
+                }, 500);
+                firstError.focus();
+            }
+        }
+
+        function showPreview() {
+            const formData = collectFormData();
+            const previewHtml = generatePreviewHtml(formData);
+
+            $('#previewContent').html(previewHtml);
+            $('#previewModal').modal('show');
+        }
+
+        function collectFormData() {
+            return {
+                firstName: $('#FirstName').val() || '',
+                lastName: $('#LastName').val() || '',
+                firstNameEn: $('#FirstNameEn').val() || '',
+                lastNameEn: $('#LastNameEn').val() || '',
+                institution: $('#Institution').val() || '',
+                academicDegree: $('#AcademicDegree').val() || '',
+                orcidId: $('#OrcidId').val() || '',
+                email: '@Model.CurrentEmail'
+            };
+        }
+
+        function generatePreviewHtml(data) {
+            var previewHtml = '<div class="row">' +
+                '<div class="col-md-6">' +
+                    '<h6 class="text-primary">المعلومات الشخصية</h6>' +
+                    '<p><strong>الاسم:</strong> ' + data.firstName + ' ' + data.lastName + '</p>';
+
+            if (data.firstNameEn) {
+                previewHtml += '<p><strong>الاسم (إنجليزي):</strong> ' + data.firstNameEn + ' ' + data.lastNameEn + '</p>';
+            }
+
+            previewHtml += '<p><strong>البريد الإلكتروني:</strong> ' + data.email + '</p>' +
+                '</div>' +
+                '<div class="col-md-6">' +
+                    '<h6 class="text-primary">المعلومات الأكاديمية</h6>';
+
+            if (data.institution) {
+                previewHtml += '<p><strong>المؤسسة:</strong> ' + data.institution + '</p>';
+            } else {
+                previewHtml += '<p class="text-muted">لم يتم تحديد مؤسسة</p>';
+            }
+
+            if (data.academicDegree) {
+                previewHtml += '<p><strong>الدرجة العلمية:</strong> ' + data.academicDegree + '</p>';
+            } else {
+                previewHtml += '<p class="text-muted">لم يتم تحديد درجة علمية</p>';
+            }
+
+            if (data.orcidId) {
+                previewHtml += '<p><strong>معرف ORCID:</strong> ' + data.orcidId + '</p>';
+            } else {
+                previewHtml += '<p class="text-muted">لا يوجد معرف ORCID</p>';
+            }
+
+            previewHtml += '</div></div>';
+
+            return previewHtml;
+        }
+
+        function showNotification(message, type) {
+            type = type || 'info';
+            const alertClass = type === 'success' ? 'alert-success' :
+                              type === 'error' ? 'alert-danger' :
+                              'alert-info';
+
+            const iconClass = type === 'success' ? 'check-circle' :
+                             type === 'error' ? 'exclamation-circle' :
+                             'info-circle';
+
+            const notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">' +
+                '<i class="fas fa-' + iconClass + ' me-2"></i>' + message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>');
+
+            $('body').append(notification);
+
+            setTimeout(function() {
+                notification.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid var(--bs-primary);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-actions {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "/";
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
+            color: white;
+            border-bottom: none;
+        }
+
+            .modal-header .btn-close {
+                filter: invert(1);
+            }
+
+        @@media (max-width: 768px) {
+            .form-actions .d-flex
+
+        {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-actions .d-flex > div {
+            text-align: center;
+        }
+
+        .form-section {
+            border-left: none;
+            border-right: 4px solid var(--bs-primary);
+        }
+
+        }
+    </style>
+}

@@ -1,0 +1,319 @@
+﻿@model ResearchManagement.Web.Models.ViewModels.Profile.SecuritySettingsViewModel
+@{
+    ViewData["Title"] = "إعدادات الأمان";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-shield-alt me-2 text-primary"></i>إعدادات الأمان</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a asp-action="Index">الملف الشخصي</a></li>
+                        <li class="breadcrumb-item active">إعدادات الأمان</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للملف الشخصي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Security Overview -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lock me-2"></i>حالة الأمان</h5>
+            </div>
+            <div class="card-body">
+                <!-- Email Verification -->
+                <div class="security-item mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-envelope text-@(Model.EmailConfirmed ? "success" : "warning") me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">تأكيد البريد الإلكتروني</h6>
+                                <small class="text-muted">
+                                    @if (Model.EmailConfirmed)
+                                    {
+                                        <span class="text-success">تم تأكيد البريد الإلكتروني بنجاح</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-warning">البريد الإلكتروني غير مؤكد</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            @if (Model.EmailConfirmed)
+                            {
+                                <span class="badge bg-success">مفعل</span>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-warning btn-sm" id="sendVerificationEmail">
+                                    <i class="fas fa-paper-plane me-1"></i>إرسال رابط التأكيد
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Factor Authentication -->
+                <div class="security-item mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-mobile-alt text-@(Model.TwoFactorEnabled ? "success" : "secondary") me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">المصادقة الثنائية</h6>
+                                <small class="text-muted">
+                                    @if (Model.TwoFactorEnabled)
+                                    {
+                                        <span class="text-success">تم تفعيل المصادقة الثنائية</span>
+                                    }
+                                    else
+                                    {
+                                        <span>إضافة طبقة حماية إضافية لحسابك</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            @if (Model.TwoFactorEnabled)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" id="disableTwoFactor">
+                                    <i class="fas fa-times me-1"></i>إلغاء التفعيل
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-success btn-sm" id="enableTwoFactor">
+                                    <i class="fas fa-plus me-1"></i>تفعيل
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="security-item mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-key text-primary me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">كلمة المرور</h6>
+                                <small class="text-muted">
+                                    @if (Model.LastPasswordChange.HasValue)
+                                    {
+                                        <span>آخر تغيير: @Model.LastPasswordChange.Value.ToString("yyyy/MM/dd")</span>
+                                    }
+                                    else
+                                    {
+                                        <span>لم يتم تغيير كلمة المرور</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            <a asp-action="ChangePassword" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>تغيير كلمة المرور
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Recommendations -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb me-2"></i>نصائح الأمان</h6>
+                    <ul class="mb-0">
+                        <li>استخدم كلمة مرور قوية وفريدة</li>
+                        <li>فعل المصادقة الثنائية لحماية إضافية</li>
+                        <li>تأكد من البريد الإلكتروني لتلقي التنبيهات</li>
+                        <li>راجع أنشطة تسجيل الدخول بانتظام</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login History -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>محاولات تسجيل الدخول</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.LoginAttempts.Any())
+                {
+                    @foreach (var attempt in Model.LoginAttempts)
+                    {
+                        <div class="login-attempt mb-3 pb-3 @(attempt == Model.LoginAttempts.Last() ? "" : "border-bottom")">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-@(attempt.IsSuccessful ? "check-circle text-success" : "times-circle text-danger") me-2"></i>
+                                <small class="text-muted">@attempt.LoginTime.ToString("yyyy/MM/dd HH:mm")</small>
+                            </div>
+                            <div class="mb-1">
+                                <small><strong>@attempt.Location</strong></small>
+                            </div>
+                            <div class="mb-1">
+                                <small class="text-muted">IP: @attempt.IpAddress</small>
+                            </div>
+                            <div>
+                                <small class="text-muted" title="@attempt.UserAgent">
+                                    @(attempt.UserAgent.Length > 30 ? attempt.UserAgent.Substring(0, 30) + "..." : attempt.UserAgent)
+                                </small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">لا توجد محاولات دخول مسجلة</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Enable Two Factor Authentication
+            $('#enableTwoFactor').click(function() {
+                if (confirm('هل تريد تفعيل المصادقة الثنائية؟')) {
+                    $.post('@Url.Action("EnableTwoFactor")', {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('حدث خطأ في الاتصال');
+                    });
+                }
+            });
+
+            // Disable Two Factor Authentication
+            $('#disableTwoFactor').click(function() {
+                if (confirm('هل تريد إلغاء تفعيل المصادقة الثنائية؟')) {
+                    $.post('@Url.Action("DisableTwoFactor")', {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('حدث خطأ في الاتصال');
+                    });
+                }
+            });
+
+            // Send Verification Email
+            $('#sendVerificationEmail').click(function() {
+                var button = $(this);
+                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>جار الإرسال...');
+
+                $.post('@Url.Action("SendVerificationEmail")', {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        button.removeClass('btn-outline-warning').addClass('btn-outline-success')
+                               .html('<i class="fas fa-check me-1"></i>تم الإرسال');
+                        alert('تم إرسال رابط التأكيد إلى بريدك الإلكتروني');
+                    } else {
+                        button.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>إرسال رابط التأكيد');
+                        alert(response.message);
+                    }
+                })
+                .fail(function() {
+                    button.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i>إرسال رابط التأكيد');
+                    alert('حدث خطأ في الاتصال');
+                });
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .security-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .login-attempt {
+            transition: background-color 0.2s ease;
+        }
+
+            .login-attempt:hover {
+                background-color: rgba(0, 123, 255, 0.05);
+                border-radius: 4px;
+                padding: 0.5rem;
+                margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+            }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "/";
+        }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        @@media (max-width: 768px) {
+            .security-item .d-flex
+
+        {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .security-item .d-flex > div:first-child {
+            margin-bottom: 1rem;
+        }
+
+        }
+    </style>
+}
+
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()

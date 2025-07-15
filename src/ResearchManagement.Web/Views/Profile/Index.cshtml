@@ -1,7 +1,24 @@
-﻿@model ResearchManagement.Web.Models.ViewModels.User
+﻿@model ResearchManagement.Web.Models.ViewModels.Profile.UserProfileViewModel
 @{
     ViewData["Title"] = "الملف الشخصي";
     Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<!-- Success/Error Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 <div class="row mb-4">
@@ -28,7 +45,16 @@
                 <!-- Profile Avatar -->
                 <div class="avatar-xl mx-auto mb-4">
                     <div class="avatar-title bg-primary text-white rounded-circle fs-1">
-                        @Model.User.FirstName.Substring(0, 1)@Model.User.LastName.Substring(0, 1)
+                        @if (!string.IsNullOrEmpty(Model.User.FirstName) && !string.IsNullOrEmpty(Model.User.LastName))
+                        {
+                            @Model.User.FirstName.Substring(0, 1)
+
+                            @Model.User.LastName.Substring(0, 1)
+                        }
+                        else
+                        {
+                            <i class="fas fa-user"></i>
+                        }
                     </div>
                 </div>
 
@@ -317,7 +343,7 @@
 </div>
 
 @functions {
-    private string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
+    string GetRoleDisplayName(ResearchManagement.Domain.Enums.UserRole role)
     {
         return role switch
         {
@@ -330,7 +356,7 @@
         };
     }
 
-    private string GetRoleColorClass(ResearchManagement.Domain.Enums.UserRole role)
+    string GetRoleColorClass(ResearchManagement.Domain.Enums.UserRole role)
     {
         return role switch
         {
@@ -343,7 +369,7 @@
         };
     }
 
-    private string GetRelativeTime(DateTime dateTime)
+    string GetRelativeTime(DateTime dateTime)
     {
         var timeSpan = DateTime.UtcNow - dateTime;
 
@@ -383,8 +409,8 @@
 
         function animateCounters() {
             $('.card .text-primary, .card .text-success, .card .text-info, .card .text-warning').each(function(index) {
-                const $this = $(this);
-                const finalValue = parseFloat($this.text()) || 0;
+                var $this = $(this);
+                var finalValue = parseFloat($this.text()) || 0;
 
                 setTimeout(function() {
                     $({ countNum: 0 }).animate({
@@ -451,6 +477,9 @@
                     (stats.pendingReviews / stats.totalReviews * 100) + '%');
             }
         }
+
+        // Handle alert auto-dismiss
+        $('.alert').delay(5000).fadeOut('slow');
     </script>
 }
 
@@ -545,6 +574,12 @@
 
         .text-decoration-none:hover {
             text-decoration: underline !important;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         @@media (max-width: 768px) {

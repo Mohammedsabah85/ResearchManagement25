@@ -7,8 +7,11 @@ using ResearchManagement.Application.Interfaces;
 using ResearchManagement.Web.Models.ViewModels.User;
 using ResearchManagement.Web.Models.ViewModels.Profile;
 using AutoMapper;
-using LoginAttemptViewModel = ResearchManagement.Web.Models.ViewModels.User.LoginAttemptViewModel;
-
+using ResearchManagement.Domain.Enums;
+using LoginAttemptViewModel = ResearchManagement.Web.Models.ViewModels.Profile.LoginAttemptViewModel;
+using UserActivityStatistics = ResearchManagement.Web.Models.ViewModels.Profile.UserActivityStatistics;
+using SecuritySettingsViewModel = ResearchManagement.Web.Models.ViewModels.Profile.SecuritySettingsViewModel;
+using UserActivityListViewModel = ResearchManagement.Web.Models.ViewModels.Profile.UserActivityListViewModel;
 
 namespace ResearchManagement.Web.Controllers
 {
@@ -54,7 +57,7 @@ namespace ResearchManagement.Web.Controllers
                 {
                     User = userDto,
                     CanEdit = true,
-                    Roles = userRoles.ToList(),
+                    Roles = userRoles?.ToList() ?? new List<string>(),
                     ActivityStats = await GetUserActivityStatisticsAsync(currentUser.Id),
                     RecentActivities = await GetRecentActivitiesAsync(currentUser.Id)
                 };
@@ -64,7 +67,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading user profile");
-                AddErrorMessage("حدث خطأ في تحميل الملف الشخصي");
+                TempData["ErrorMessage"] = "حدث خطأ في تحميل الملف الشخصي";
                 return RedirectToAction("Index", "Dashboard");
             }
         }
@@ -89,7 +92,7 @@ namespace ResearchManagement.Web.Controllers
                     Institution = currentUser.Institution,
                     AcademicDegree = currentUser.AcademicDegree,
                     OrcidId = currentUser.OrcidId,
-                    CurrentEmail = currentUser.Email
+                    CurrentEmail = currentUser.Email ?? string.Empty
                 };
 
                 return View(viewModel);
@@ -97,7 +100,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading profile edit form");
-                AddErrorMessage("حدث خطأ في تحميل نموذج التعديل");
+                TempData["ErrorMessage"] = "حدث خطأ في تحميل نموذج التعديل";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -135,7 +138,7 @@ namespace ResearchManagement.Web.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User profile updated successfully: {UserId}", currentUser.Id);
-                    AddSuccessMessage("تم تحديث الملف الشخصي بنجاح");
+                    TempData["SuccessMessage"] = "تم تحديث الملف الشخصي بنجاح";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -147,7 +150,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user profile");
-                AddErrorMessage("حدث خطأ في تحديث الملف الشخصي");
+                TempData["ErrorMessage"] = "حدث خطأ في تحديث الملف الشخصي";
             }
 
             return View(model);
@@ -181,7 +184,7 @@ namespace ResearchManagement.Web.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("Password changed successfully for user: {UserId}", currentUser.Id);
-                    AddSuccessMessage("تم تغيير كلمة المرور بنجاح");
+                    TempData["SuccessMessage"] = "تم تغيير كلمة المرور بنجاح";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -193,7 +196,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error changing password");
-                AddErrorMessage("حدث خطأ في تغيير كلمة المرور");
+                TempData["ErrorMessage"] = "حدث خطأ في تغيير كلمة المرور";
             }
 
             return View(model);
@@ -227,7 +230,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading user activities");
-                AddErrorMessage("حدث خطأ في تحميل الأنشطة");
+                TempData["ErrorMessage"] = "حدث خطأ في تحميل الأنشطة";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -256,7 +259,7 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading security settings");
-                AddErrorMessage("حدث خطأ في تحميل إعدادات الأمان");
+                TempData["ErrorMessage"] = "حدث خطأ في تحميل إعدادات الأمان";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -365,16 +368,16 @@ namespace ResearchManagement.Web.Controllers
                 return new UserActivityStatistics
                 {
                     TotalResearches = researches.Count(),
-                    AcceptedResearches = researches.Count(r => r.Status == Domain.Enums.ResearchStatus.Accepted),
-                    RejectedResearches = researches.Count(r => r.Status == Domain.Enums.ResearchStatus.Rejected),
+                    AcceptedResearches = researches.Count(r => r.Status == ResearchStatus.Accepted),
+                    RejectedResearches = researches.Count(r => r.Status == ResearchStatus.Rejected),
                     PendingResearches = researches.Count(r =>
-                        r.Status == Domain.Enums.ResearchStatus.Submitted ||
-                        r.Status == Domain.Enums.ResearchStatus.UnderReview ||
-                        r.Status == Domain.Enums.ResearchStatus.UnderEvaluation),
+                        r.Status == ResearchStatus.Submitted ||
+                        r.Status == ResearchStatus.UnderReview ||
+                        r.Status == ResearchStatus.UnderEvaluation),
                     TotalReviews = reviews.Count(),
                     CompletedReviews = completedReviews.Count,
                     PendingReviews = pendingReviews.Count(),
-                    OverdueReviews = pendingReviews.Count(r => r.Deadline < DateTime.UtcNow),
+                    OverdueReviews = pendingReviews.Count(r => r.Deadline.HasValue && r.Deadline < DateTime.UtcNow),
                     AverageReviewScore = averageScore,
                     LastActivity = GetLastActivityDate(researches, reviews)
                 };
@@ -382,39 +385,59 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error calculating user activity statistics for user: {UserId}", userId);
-                return new UserActivityStatistics();
+                return new UserActivityStatistics
+                {
+                    TotalResearches = 0,
+                    AcceptedResearches = 0,
+                    RejectedResearches = 0,
+                    PendingResearches = 0,
+                    TotalReviews = 0,
+                    CompletedReviews = 0,
+                    PendingReviews = 0,
+                    OverdueReviews = 0,
+                    AverageReviewScore = 0.0,
+                    LastActivity = null
+                };
             }
         }
 
         private DateTime? GetLastActivityDate(IEnumerable<Research> researches, IEnumerable<Review> reviews)
         {
-            var lastResearchDate = researches.Any() ? researches.Max(r => r.SubmissionDate) : (DateTime?)null;
-            var completedReviews = reviews.Where(r => r.CompletedDate.HasValue);
-            var lastReviewDate = completedReviews.Any()
-                ? completedReviews.Max(r => r.CompletedDate!.Value)
-                : (DateTime?)null;
+            try
+            {
+                var lastResearchDate = researches.Any() ? researches.Max(r => r.SubmissionDate) : (DateTime?)null;
+                var completedReviews = reviews.Where(r => r.CompletedDate.HasValue);
+                var lastReviewDate = completedReviews.Any()
+                    ? completedReviews.Max(r => r.CompletedDate!.Value)
+                    : (DateTime?)null;
 
-            if (lastResearchDate.HasValue && lastReviewDate.HasValue)
-                return lastResearchDate > lastReviewDate ? lastResearchDate : lastReviewDate;
+                if (lastResearchDate.HasValue && lastReviewDate.HasValue)
+                    return lastResearchDate > lastReviewDate ? lastResearchDate : lastReviewDate;
 
-            return lastResearchDate ?? lastReviewDate;
+                return lastResearchDate ?? lastReviewDate;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculating last activity date");
+                return null;
+            }
         }
 
-        private async Task<List<UserActivityViewModel>> GetRecentActivitiesAsync(string userId)
+        private async Task<List<ProfileActivityViewModel>> GetRecentActivitiesAsync(string userId)
         {
             try
             {
-                var activities = new List<UserActivityViewModel>();
+                var activities = new List<ProfileActivityViewModel>();
 
                 // أنشطة البحوث
                 var researches = await _researchRepository.GetByUserIdAsync(userId);
                 foreach (var research in researches.OrderByDescending(r => r.SubmissionDate).Take(5))
                 {
-                    activities.Add(new UserActivityViewModel
+                    activities.Add(new ProfileActivityViewModel
                     {
                         ActivityType = "research_submitted",
                         Title = "تقديم بحث",
-                        Description = $"تم تقديم البحث: {research.Title}",
+                        Description = $"تم تقديم البحث: {research.Title ?? "غير محدد"}",
                         CreatedAt = research.SubmissionDate,
                         ActionUrl = Url.Action("Details", "Research", new { id = research.Id }),
                         StatusClass = "primary",
@@ -426,11 +449,11 @@ namespace ResearchManagement.Web.Controllers
                 var reviews = await _reviewRepository.GetByReviewerIdAsync(userId);
                 foreach (var review in reviews.Where(r => r.IsCompleted).OrderByDescending(r => r.CompletedDate).Take(5))
                 {
-                    activities.Add(new UserActivityViewModel
+                    activities.Add(new ProfileActivityViewModel
                     {
                         ActivityType = "review_completed",
                         Title = "إكمال مراجعة",
-                        Description = $"تم إكمال مراجعة البحث: {review.Research.Title}",
+                        Description = $"تم إكمال مراجعة البحث: {review.Research?.Title ?? "غير محدد"}",
                         CreatedAt = review.CompletedDate ?? review.AssignedDate,
                         ActionUrl = Url.Action("Details", "Review", new { id = review.Id }),
                         StatusClass = "success",
@@ -443,19 +466,26 @@ namespace ResearchManagement.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading recent activities for user: {UserId}", userId);
-                return new List<UserActivityViewModel>();
+                return new List<ProfileActivityViewModel>();
             }
         }
 
-        private async Task<List<UserActivityViewModel>> GetUserActivitiesAsync(string userId, int page, int pageSize)
+        private async Task<List<ProfileActivityViewModel>> GetUserActivitiesAsync(string userId, int page, int pageSize)
         {
-            // يمكن توسيع هذه الدالة لتشمل المزيد من الأنشطة من قاعدة البيانات
-            var activities = await GetRecentActivitiesAsync(userId);
+            try
+            {
+                var activities = await GetRecentActivitiesAsync(userId);
 
-            return activities
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+                return activities
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user activities for page {Page}, size {PageSize}", page, pageSize);
+                return new List<ProfileActivityViewModel>();
+            }
         }
 
         private async Task<int> GetUserActivitiesCountAsync(string userId)
@@ -498,6 +528,17 @@ namespace ResearchManagement.Web.Controllers
                     Location = "Baghdad, Iraq"
                 }
             };
+        }
+
+        // Helper methods for TempData messages
+        private void AddSuccessMessage(string message)
+        {
+            TempData["SuccessMessage"] = message;
+        }
+
+        private void AddErrorMessage(string message)
+        {
+            TempData["ErrorMessage"] = message;
         }
     }
 }
