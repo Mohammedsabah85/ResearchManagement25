@@ -257,11 +257,11 @@ builder.Services.AddScoped<IRequestHandler<GetResearchListQuery, PagedResult<Res
 
     builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// 6. ≈÷«›… AutoMapper
-builder.Services.AddAutoMapper(typeof(ApplicationMappingProfile), typeof(WebMappingProfile));
+    // 6. ≈÷«›… AutoMapper
+    builder.Services.AddAutoMapper(typeof(ApplicationMappingProfile), typeof(WebMappingProfile));
 
-//  ”ÃÌ· AutoMapper
-builder.Services.AddAutoMapper(typeof(ResearchManagement.Application.Mappings.ApplicationMappingProfile));
+    //  ”ÃÌ· AutoMapper
+    builder.Services.AddAutoMapper(typeof(ResearchManagement.Application.Mappings.ApplicationMappingProfile));
 
 //  ”ÃÌ· FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(ResearchManagement.Application.Validators.CreateResearchDtoValidator).Assembly);

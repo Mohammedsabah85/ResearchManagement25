@@ -67,8 +67,8 @@ namespace ResearchManagement.Web.Extensions
         {
             // تسجيل AutoMapper مع كلا من Application و Web profiles
             services.AddAutoMapper(
-                typeof(ResearchManagement.Application.Mappings.ApplicationMappingProfile),
-                typeof(ResearchManagement.Web.Mappings.WebMappingProfile)
+                typeof(ResearchManagement.Application.Mappings.ApplicationMappingProfile)
+                //typeof(ResearchManagement.Web.Mappings.WebMappingProfile)
             );
 
             return services;
