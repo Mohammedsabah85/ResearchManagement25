@@ -205,12 +205,12 @@ namespace ResearchManagement.Web.Controllers
         [Authorize(Roles = "Researcher,SystemAdmin")]
         public async Task<IActionResult> Create(CreateResearchViewModel model, List<IFormFile> files)
         {
-            //try
-            //{
-                //if (!ModelState.IsValid)
-                //{
-                //    return View(model);
-                //}
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
 
                 var user = await GetCurrentUserAsync();
                 if (user == null)
@@ -238,7 +238,8 @@ namespace ResearchManagement.Web.Controllers
                                 FileName = fileName,
                                 OriginalFileName = file.FileName,
                                 FilePath = filePath,
-                                ContentType = file.ContentType,
+                                //ContentType = file.ContentType,
+                                ContentType = ContentTypeHelper.GetShortContentType(file.ContentType),
                                 FileSize = file.Length,
                                 FileType = GetFileType(file.ContentType),
                                 Description = "ملف البحث الرئيسي"
@@ -258,13 +259,13 @@ namespace ResearchManagement.Web.Controllers
 
                 TempData["SuccessMessage"] = "تم تقديم البحث بنجاح";
                 return RedirectToAction(nameof(Details), new { id = researchId });
-            //}
-            //catch (Exception ex)
-            //{
-            //    _logger.LogError(ex, "Error occurred while creating research");
-            //    TempData["ErrorMessage"] = "حدث خطأ أثناء تقديم البحث";
-            //    return View(model);
-            //}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating research");
+                TempData["ErrorMessage"] = "حدث خطأ أثناء تقديم البحث";
+                return View(model);
+            }
         }
 
         //// GET: Research/Edit/5
@@ -754,7 +755,8 @@ namespace ResearchManagement.Web.Controllers
                             FileName = fileName,
                             OriginalFileName = file.FileName,
                             FilePath = filePath,
-                            ContentType = file.ContentType,
+                            //ContentType = file.ContentType,
+                            ContentType = ContentTypeHelper.GetShortContentType(file.ContentType),
                             FileSize = file.Length,
                             FileType = GetFileType(file.ContentType),
                             Description = "ملف محدث"
@@ -775,6 +777,116 @@ namespace ResearchManagement.Web.Controllers
 
 
 
+
+
+        // إضافة هذا Helper في ResearchController أو في فئة منفصلة
+        public static class ContentTypeHelper
+        {
+            private static readonly Dictionary<string, string> ContentTypeMapping = new()
+    {
+        // PDF Files
+        { "application/pdf", "application/pdf" },
+        
+        // Word Documents
+        { "application/msword", "application/msword" },
+        { "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/docx" },
+        
+        // Excel Files
+        { "application/vnd.ms-excel", "application/excel" },
+        { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/xlsx" },
+        
+        // PowerPoint Files
+        { "application/vnd.ms-powerpoint", "application/ppt" },
+        { "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/pptx" },
+        
+        // Image Files
+        { "image/jpeg", "image/jpeg" },
+        { "image/jpg", "image/jpg" },
+        { "image/png", "image/png" },
+        { "image/gif", "image/gif" },
+        
+        // Text Files
+        { "text/plain", "text/plain" },
+        { "text/csv", "text/csv" },
+        
+        // Archive Files
+        { "application/zip", "application/zip" },
+        { "application/x-rar-compressed", "application/rar" },
+        
+        // Default
+        { "", "application/octet-stream" }
+    };
+
+            public static string GetShortContentType(string originalContentType)
+            {
+                if (string.IsNullOrWhiteSpace(originalContentType))
+                    return "application/octet-stream";
+
+                // البحث عن مطابقة مباشرة
+                if (ContentTypeMapping.TryGetValue(originalContentType, out var mappedType))
+                    return mappedType;
+
+                // إذا لم توجد مطابقة، اختصر النوع الطويل
+                if (originalContentType.Length > 50)
+                {
+                    // محاولة استخراج النوع الأساسي
+                    if (originalContentType.Contains("wordprocessingml"))
+                        return "application/docx";
+                    else if (originalContentType.Contains("spreadsheetml"))
+                        return "application/xlsx";
+                    else if (originalContentType.Contains("presentationml"))
+                        return "application/pptx";
+                    else if (originalContentType.StartsWith("application/"))
+                        return "application/unknown";
+                    else if (originalContentType.StartsWith("text/"))
+                        return "text/plain";
+                    else if (originalContentType.StartsWith("image/"))
+                        return "image/unknown";
+                    else
+                        return "application/octet-stream";
+                }
+
+                return originalContentType;
+            }
+
+            public static string GetFileExtensionFromContentType(string contentType)
+            {
+                return contentType switch
+                {
+                    "application/pdf" => ".pdf",
+                    "application/msword" or "application/docx" => ".docx",
+                    "application/excel" or "application/xlsx" => ".xlsx",
+                    "application/ppt" or "application/pptx" => ".pptx",
+                    "image/jpeg" or "image/jpg" => ".jpg",
+                    "image/png" => ".png",
+                    "image/gif" => ".gif",
+                    "text/plain" => ".txt",
+                    "text/csv" => ".csv",
+                    "application/zip" => ".zip",
+                    "application/rar" => ".rar",
+                    _ => ""
+                };
+            }
+
+            public static string GetDisplayName(string contentType)
+            {
+                return contentType switch
+                {
+                    "application/pdf" => "PDF Document",
+                    "application/msword" or "application/docx" => "Word Document",
+                    "application/excel" or "application/xlsx" => "Excel Spreadsheet",
+                    "application/ppt" or "application/pptx" => "PowerPoint Presentation",
+                    "image/jpeg" or "image/jpg" => "JPEG Image",
+                    "image/png" => "PNG Image",
+                    "image/gif" => "GIF Image",
+                    "text/plain" => "Text Document",
+                    "text/csv" => "CSV File",
+                    "application/zip" => "ZIP Archive",
+                    "application/rar" => "RAR Archive",
+                    _ => "Unknown File Type"
+                };
+            }
+        }
 
 
 
@@ -892,7 +1004,7 @@ namespace ResearchManagement.Web.Controllers
         }
 
         // GET: Research/DownloadFile/5
-        [Authorize(Roles = "Reviewer,TrackManager,ConferenceManager,SystemAdmin")]
+        [Authorize(Roles = "Researcher,Reviewer,TrackManager,ConferenceManager,SystemAdmin")]
 
         public async Task<IActionResult> DownloadFile(int fileId)
         {
